@@ -20,8 +20,9 @@ the ZenNotes app on your computer or phone. It is built so that your pages and n
 ## Where it goes
 
 - **To the ZenNotes app on your device.** The note is put on your clipboard and the ZenNotes app,
-  opened through a `zennotes://` link, saves it in your vault. Nothing passes through a ZenNotes
-  server.
+  opened through a `zennotes://` link, saves it in your vault. In Safari on iPhone and iPad the
+  note is only copied, for you to paste where you want it, unless you turn on "Open ZenNotes after
+  clipping" in the settings. Nothing passes through a ZenNotes server.
 - **Kept in your browser:** your settings, templates and saved highlights are stored in the
   browser's own extension storage on your device. They are not synced by the extension. You can
   export or delete all saved highlights from the extension's settings, and removing the

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Show highlights when you come back</title>
+    <script type="module" crossorigin src="../assets/offer-BYh6zJhK.js"></script>
+    <link rel="stylesheet" crossorigin href="../assets/storage-DdUw705k.css">
+  </head>
+  <body class="p-4">
+    <main class="flex flex-col gap-3">
+      <h1 class="text-sm font-semibold text-ink-800">Show highlights when you come back?</h1>
+      <p class="text-xs leading-relaxed text-ink-600">
+        Your browser will ask to let the clipper read the sites you visit. It uses that only to draw
+        your saved highlights again.
+      </p>
+      <div class="flex items-center justify-end gap-2">
+        <button
+          id="no"
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-md bg-paper-200 px-3 py-1.5 text-sm font-medium text-ink-800 hover:bg-paper-300"
+        >
+          Not now <kbd class="zn-kbd">Esc</kbd>
+        </button>
+        <button
+          id="yes"
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-paper-50 hover:bg-accent/90"
+        >
+          Show them <kbd class="zn-kbd">Enter</kbd>
+        </button>
+      </div>
+      <p id="status" class="min-h-4 text-xs text-ink-600" role="status" aria-live="polite"></p>
+    </main>
+  </body>
+</html>

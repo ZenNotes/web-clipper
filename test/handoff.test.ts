@@ -98,3 +98,20 @@ describe('handoff', () => {
     expect(opened[0]).toMatch(/^zennotes:\/\/new\?vault=Work&file=Clippings%2FMy%20Article&clipboard=[0-9a-f]{64}$/)
   })
 })
+
+describe('copy only (iPhone and iPad)', () => {
+  it('copies the note and opens no link', async () => {
+    const { d, opened, clipboard } = deps()
+    const res = await handoff('Body\n', target, d, { copyOnly: true })
+    expect(res).toEqual({ ok: true, via: 'copied', link: '' })
+    expect(clipboard()).toBe('Body\n')
+    expect(opened).toEqual([])
+  })
+
+  it('reports a failed copy instead of sending the note in a link', async () => {
+    const { d, opened } = deps(false)
+    const res = await handoff('Body\n', target, d, { copyOnly: true })
+    expect(res.ok).toBe(false)
+    expect(opened).toEqual([])
+  })
+})

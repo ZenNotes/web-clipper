@@ -88,6 +88,7 @@ export function defaultSettings(): Settings {
     defaultVault: '',
     silent: false,
     preferInline: false,
+    iosOpenApp: false,
     templates: [defaultTemplate()],
     highlighter: { contentMode: 'highlight', restoreOnVisit: false, restoreOffered: false },
     reader: { font: 'serif', fontSize: 19, lineHeight: 1.6, maxWidth: 680, appearance: 'auto', customCss: '' },

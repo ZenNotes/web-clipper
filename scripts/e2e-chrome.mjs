@@ -20,7 +20,8 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const extDir = resolve(root, 'dist/chrome-e2e')
+// ZN_DIST points at another build folder, as in scripts/build.mjs.
+const extDir = resolve(root, process.env.ZN_DIST ?? 'dist', 'chrome-e2e')
 const headed = process.argv.includes('--headed')
 const outArg = process.argv.indexOf('--out')
 const outDir = outArg > 0 ? resolve(process.argv[outArg + 1]) : mkdtempSync(join(tmpdir(), 'zn-clipper-e2e-out-'))

@@ -267,6 +267,10 @@ export class Highlighter {
   }
 
   private handlePointerUp(e: PointerEvent): void {
+    // On a touch screen a long press selects one word and lifts the finger
+    // before the selection is grown, so the toolbar's Highlight button takes
+    // the selection instead.
+    if (e.pointerType === 'touch') return
     if ((e.target as Element | null)?.closest?.(`[${UI_ATTR}]`)) return
     setTimeout(() => this.addSelection(), 0)
   }
@@ -298,6 +302,7 @@ export class Highlighter {
   }
 
   private showToolbar(): void {
+    const touch = !!this.doc.defaultView?.matchMedia?.('(hover: none) and (pointer: coarse)').matches
     const host = this.doc.createElement('div')
     host.setAttribute(UI_ATTR, '')
     host.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:2147483647;'
@@ -316,10 +321,20 @@ export class Highlighter {
       <div class="bar" role="status">
         <span class="dot"></span>
         <span class="count"></span>
-        <span class="hint">Select text, then <kbd>H</kbd>. <kbd>U</kbd> undo, <kbd>Esc</kbd> done</span>
+        <span class="hint">${
+          touch ? 'Select text, then Highlight.' : 'Select text, then <kbd>H</kbd>. <kbd>U</kbd> undo, <kbd>Esc</kbd> done'
+        }</span>
+        ${touch ? '<button type="button" data-act="add">Highlight</button>' : ''}
         <button type="button" data-act="clear">Clear</button>
         <button type="button" data-act="done">Done</button>
       </div>`
+    const add = root.querySelector('[data-act="add"]')
+    if (add) {
+      // Pressing a button would otherwise clear the selection it is for.
+      add.addEventListener('pointerdown', (e) => e.preventDefault())
+      add.addEventListener('mousedown', (e) => e.preventDefault())
+      add.addEventListener('click', () => this.addSelection())
+    }
     root.querySelector('[data-act="clear"]')!.addEventListener('click', () => this.clear())
     root.querySelector('[data-act="done"]')!.addEventListener('click', () => this.setActive(false))
     this.countLabel = root.querySelector('.count')

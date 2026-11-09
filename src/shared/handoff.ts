@@ -48,13 +48,17 @@ export interface NativeClipReply {
 export const NATIVE_WAKE_LINK = 'zennotes://open'
 
 export type HandoffResult =
-  | { ok: true; via: 'clipboard' | 'inline' | 'native'; link: string }
+  | { ok: true; via: 'clipboard' | 'inline' | 'native' | 'copied'; link: string }
   | { ok: false; error: string }
 
 export interface HandoffOptions {
   /** Send notes that fit in the link inline instead of on the clipboard
    *  (for systems where the app cannot read the clipboard while unfocused). */
   preferInline?: boolean
+  /** Only copy the note; open no link. For iPhone and iPad, where the
+   *  ZenNotes app does not read clip links yet: its widget link
+   *  `zennotes://new` would make a blank note instead. */
+  copyOnly?: boolean
 }
 
 export async function handoff(
@@ -66,6 +70,12 @@ export async function handoff(
   const bytes = utf8Length(text)
   if (bytes === 0) return { ok: false, error: 'There is nothing to clip.' }
   if (bytes > MAX_NOTE_BYTES) return { ok: false, error: 'The note is over 8 MiB.' }
+
+  if (options.copyOnly) {
+    return (await deps.writeClipboard(text).catch(() => false))
+      ? { ok: true, via: 'copied', link: '' }
+      : { ok: false, error: 'Could not copy the note.' }
+  }
 
   try {
     if (deps.nativeClip) {

@@ -1,0 +1,119 @@
+/* ZenNotes tokens (app-core styles): the light default and dark-hard. */
+:root {
+    color-scheme: light dark;
+    --bg: rgb(251 241 199);
+    --panel: rgb(242 229 188);
+    --line: rgb(213 196 161);
+    --fg: rgb(60 56 54);
+    --muted: rgb(124 111 100);
+    --accent: rgb(195 94 10);
+    --on-accent: rgb(251 241 199);
+    --ok: rgb(108 120 46);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: rgb(29 32 33);
+        --panel: rgb(50 48 47);
+        --line: rgb(80 73 69);
+        --fg: rgb(221 199 161);
+        --muted: rgb(146 131 116);
+        --accent: rgb(231 138 78);
+        --on-accent: rgb(29 32 33);
+        --ok: rgb(184 187 38);
+    }
+}
+
+* {
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    cursor: default;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(24px, env(safe-area-inset-top)) 28px max(24px, env(safe-area-inset-bottom));
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    max-width: 440px;
+    text-align: center;
+}
+
+.icon { width: 96px; height: 96px; }
+
+h1 { margin: 0; font-size: 22px; font-weight: 650; }
+
+.lede { margin: 0; color: var(--muted); }
+
+section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+}
+
+ol { margin: 0; padding-left: 1.3em; text-align: left; align-self: stretch; }
+ol li + li { margin-top: 4px; }
+
+/* body carries state-on or state-off too (Script.js), so the colors name
+   the state line itself. */
+.state { margin: 0; font-weight: 600; }
+.state.state-on { color: var(--ok); }
+.state.state-off { color: var(--accent); }
+
+button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font: inherit;
+    font-weight: 600;
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+kbd {
+    font: 12px "SF Mono", Menlo, monospace;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 0 5px;
+    background: var(--bg);
+    color: var(--fg);
+}
+
+button kbd { border-color: transparent; background: rgb(0 0 0 / 0.15); color: inherit; }
+
+.hint { margin: 0; font-size: 13px; color: var(--muted); }
+
+.foot { margin: 0; font-size: 12px; color: var(--muted); }
+
+body:not(.platform-mac) .platform-mac,
+body:not(.platform-ios) .platform-ios { display: none; }
+
+body:not(.state-on) .state-on,
+body:not(.state-off) .state-off { display: none; }

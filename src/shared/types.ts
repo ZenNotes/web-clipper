@@ -80,6 +80,9 @@ export interface Settings {
   silent: boolean
   /** Send notes that fit inline in the link instead of on the clipboard. */
   preferInline: boolean
+  /** iPhone and iPad: open ZenNotes after a clip. Off until the phone app
+   *  reads clip links; until then a clip is only copied. */
+  iosOpenApp: boolean
   templates: Template[]
   highlighter: {
     contentMode: HighlightContentMode

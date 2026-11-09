@@ -3,7 +3,7 @@
 // Chromium (clipboard writes go through an offscreen document), an event
 // page on Firefox and Safari (which can write the clipboard themselves).
 
-import { CONTENT_SCRIPT, ext, flavor } from '../shared/ext'
+import { CONTENT_SCRIPT, ext, flavor, iosClipMessage, platformOs } from '../shared/ext'
 import {
   copyWithExecCommand,
   handoff,
@@ -161,12 +161,14 @@ async function quickClip(tab: chrome.tabs.Tab | undefined): Promise<void> {
     })
     note = withParts(note, fin.parts)
   }
+  const ios = (await platformOs()) === 'ios'
   const result = await handoff(noteText(note), targetFor(note, settings), handoffDeps(tabId), {
-    preferInline: settings.preferInline
+    preferInline: settings.preferInline,
+    copyOnly: ios && !settings.iosOpenApp
   })
   await send(tabId, {
     type: 'zn:toast',
-    text: result.ok ? `Sent to ZenNotes: ${note.name || 'note'}` : result.error,
+    text: !result.ok ? result.error : ios ? iosClipMessage(result.via) : `Sent to ZenNotes: ${note.name || 'note'}`,
     tone: result.ok ? 'ok' : 'error'
   }).catch(() => undefined)
 }
@@ -175,6 +177,8 @@ async function providerAllowed(settings: Settings): Promise<boolean> {
   const resolved = resolveModel(settings)
   const origin = resolved ? permissionOrigin(resolved.provider) : null
   if (!origin) return false
+  // Safari decides site access itself; the request is simply tried.
+  if (flavor() === 'safari') return true
   try {
     // On Firefox the data consent must have been given too; quick clip has
     // no gesture to ask with, so it only uses what the popup was granted.
@@ -225,6 +229,9 @@ async function syncRestoreScript(settings?: Settings): Promise<void> {
 /** Shows the offer once, the first time a highlight is saved while
  *  highlights are not drawn on return and the extension has no site access. */
 async function offerCheck(): Promise<boolean> {
+  // Safari keeps site access in its own settings and answers a request with
+  // no; the Highlighter settings say where to allow it instead.
+  if (flavor() === 'safari') return false
   const s = await loadSettings()
   let granted = false
   try {

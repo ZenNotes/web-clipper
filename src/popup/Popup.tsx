@@ -3,7 +3,7 @@
 // Markdown and preview, Mod+I runs the Interpreter, Esc closes.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CONTENT_SCRIPT, ext, flavor, isMac, modKey } from '../shared/ext'
+import { CONTENT_SCRIPT, ext, flavor, iosClipMessage, isMac, modKey, platformOs } from '../shared/ext'
 import { handoff, writeClipboardInPage, type NativeClipMessage, type NativeClipReply } from '../shared/handoff'
 import { BEHAVIORS, isDailyBehavior, type Behavior } from '../shared/link'
 import type { CompileResponse, ContentError, ContentRequest, ContentState } from '../shared/messages'
@@ -60,6 +60,7 @@ export function Popup() {
   // A selection left on the page decides the content, so say so and offer
   // the whole page: a forgotten selection must not silently shrink a clip.
   const [selection, setSelection] = useState<'none' | 'used' | 'ignored'>('none')
+  const [os, setOs] = useState('')
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
   const nameRef = useRef<HTMLInputElement>(null)
 
@@ -110,6 +111,7 @@ export function Popup() {
       try {
         const s = await loadSettings()
         setSettings(s)
+        setOs(await platformOs())
         setModelId(s.interpreter.defaultModelId || s.interpreter.models[0]?.id || '')
         const tab = await targetTabId()
         setTabId(tab)
@@ -149,7 +151,9 @@ export function Popup() {
     const granted = await ext.permissions
       .request(interpreterAccess(origin, flavor()) as chrome.permissions.Permissions)
       .catch(() => false)
-    if (!granted) {
+    // Safari answers no and keeps site access in its own settings, so the
+    // request is tried and a refusal shows up as the provider's error.
+    if (!granted && flavor() !== 'safari') {
       setStatus({ kind: 'error', message: refusalMessage(resolved.provider.name, origin, flavor()) })
       return
     }
@@ -203,15 +207,25 @@ export function Popup() {
         },
         nativeClip: native
       },
-      { preferInline: settings.preferInline }
+      { preferInline: settings.preferInline, copyOnly: os === 'ios' && !settings.iosOpenApp }
     )
     if (!result.ok) {
       setStatus({ kind: 'error', message: result.error })
       return
     }
     setStatus({ kind: 'sent', via: result.via })
+    if (os === 'ios') {
+      // The popover may be gone by the time the person looks, so the page
+      // says it too; and nothing may have opened, so say where the note is.
+      if (live) {
+        void ext.tabs
+          .sendMessage(tabId, { type: 'zn:toast', text: iosClipMessage(result.via), tone: 'ok' } satisfies ContentRequest)
+          .catch(() => undefined)
+      }
+      return
+    }
     setTimeout(() => window.close(), 700)
-  }, [settings, note, tabId, interpreted, vault, status.kind])
+  }, [settings, note, tabId, interpreted, vault, status.kind, os, live])
 
   const toggleTool = useCallback(
     async (what: 'highlighter' | 'reader') => {
@@ -251,7 +265,7 @@ export function Popup() {
 
   if (!settings || !note) {
     return (
-      <div className="w-popup p-4 text-sm text-ink-600">
+      <div className="zn-popup-frame p-4 text-sm text-ink-600">
         {status.kind === 'error' ? <p className="text-danger">{status.message}</p> : <p>Reading the page…</p>}
       </div>
     )
@@ -262,7 +276,7 @@ export function Popup() {
   const busy = status.kind === 'busy' || status.kind === 'sent'
 
   return (
-    <div className="flex max-h-popup w-popup flex-col">
+    <div className="zn-popup-frame flex flex-col">
       <header className="flex items-center gap-2 border-b border-paper-300 px-3 py-2">
         <Select
           aria-label="Template"
@@ -483,9 +497,13 @@ export function Popup() {
         <div className="min-w-0 flex-1 truncate text-xs" role="status" aria-live="polite">
           {status.kind === 'error' && <span className="text-danger">{status.message}</span>}
           {status.kind === 'busy' && <span className="text-ink-600">{status.label}…</span>}
-          {status.kind === 'sent' && <span className="text-success">Sent to ZenNotes</span>}
+          {status.kind === 'sent' && (
+            <span className={os === 'ios' ? 'whitespace-normal text-success' : 'text-success'}>
+              {os === 'ios' ? iosClipMessage(status.via) : 'Sent to ZenNotes'}
+            </span>
+          )}
           {(status.kind === 'ready' || status.kind === 'loading') && (
-            <span className="text-ink-400">
+            <span className="zn-key-hint text-ink-400">
               <Kbd>Esc</Kbd> close
             </span>
           )}

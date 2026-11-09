@@ -17,7 +17,8 @@
     "build:e2e": "node scripts/build.mjs --e2e",
     "e2e:chrome": "node scripts/e2e-chrome.mjs",
     "e2e:firefox": "node scripts/e2e-firefox.mjs",
-    "store:assets": "node scripts/store-assets.mjs"
+    "store:assets": "node scripts/store-assets.mjs",
+    "safari:sync": "node scripts/safari-sync.mjs"
   },
   "dependencies": {
     "dayjs": "^1.11.13",

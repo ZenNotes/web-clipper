@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ext } from '../shared/ext'
+import { ext, flavor } from '../shared/ext'
 import { allHighlights, clearAllHighlights, removePageHighlights, type PageHighlights } from '../shared/storage'
 import type { HighlightContentMode } from '../shared/types'
 import { Button, Toggle } from '../ui/controls'
@@ -56,13 +56,17 @@ export function HighlighterSection({ settings, update }: SectionProps) {
         <Toggle
           id="hl-restore"
           label="Show highlights when you return to a page"
-          hint="Needs access to the sites you visit, asked for when you turn this on."
+          hint={
+            flavor() === 'safari'
+              ? 'In Safari, also allow ZenNotes Web Clipper on all websites in Safari Settings, Extensions.'
+              : 'Needs access to the sites you visit, asked for when you turn this on.'
+          }
           checked={settings.highlighter.restoreOnVisit}
           onChange={(v) => {
             // Choosing here answers the one-time offer too.
             const apply = () =>
               update((s) => ({ ...s, highlighter: { ...s.highlighter, restoreOnVisit: v, restoreOffered: true } }))
-            if (!v) {
+            if (!v || flavor() === 'safari') {
               apply()
               return
             }

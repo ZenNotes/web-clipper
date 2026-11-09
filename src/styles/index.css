@@ -15,6 +15,27 @@ body {
 }
 
 @layer components {
+  /* The popup: a 440 px panel in desktop browsers and in the iPad popover,
+     which takes its size from the page. Safari on iPhone shows it as a sheet
+     of its own size instead (popup/main.tsx marks that with .zn-sheet), so
+     there it fills the sheet and the clip button stays in view. */
+  .zn-popup-frame {
+    @apply w-popup max-h-popup;
+  }
+  .zn-sheet .zn-popup-frame {
+    height: 100dvh;
+    max-height: 100dvh;
+    width: 100vw;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  @media (hover: none) and (pointer: coarse) {
+    /* Key hints mean nothing without a keyboard in hand. */
+    .zn-kbd,
+    .zn-key-hint {
+      display: none;
+    }
+  }
+
   .zn-input {
     @apply w-full rounded-md border border-paper-400 bg-paper-50 px-2 py-1 text-sm text-ink-900 placeholder:text-ink-400;
   }

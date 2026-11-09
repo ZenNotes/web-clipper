@@ -19,6 +19,23 @@ export function flavor(): Flavor {
   return 'chrome'
 }
 
+/** The browser's own idea of the platform: 'ios' for Safari on iPhone and
+ *  iPad, 'mac', 'win', 'linux', 'android'. */
+export async function platformOs(): Promise<string> {
+  try {
+    return (await ext.runtime.getPlatformInfo()).os
+  } catch {
+    return /iPhone|iPad/.test(navigator.userAgent) ? 'ios' : ''
+  }
+}
+
+/** What a clip ends with on iPhone and iPad, where it may only be copied. */
+export function iosClipMessage(via: string): string {
+  return via === 'copied'
+    ? 'Copied. Paste it into a note in ZenNotes.'
+    : 'Sent. If ZenNotes did not open, the note is on your clipboard.'
+}
+
 export function isMac(): boolean {
   return /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
 }

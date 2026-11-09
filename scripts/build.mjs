@@ -5,22 +5,24 @@
 // cannot be modules and Firefox and Safari load the background as a page
 // script.
 //
-//   node scripts/build.mjs           all browsers
+//   node scripts/build.mjs           all browsers (ZN_DIST=dir to write elsewhere)
 //   node scripts/build.mjs --e2e     also dist/chrome-e2e and dist/firefox-e2e,
 //                                    with page access to 127.0.0.1 granted
 //                                    up front so an automated run can clip
 //                                    a local page
 
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { dirname, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { build } from 'vite'
 import { manifestFor } from './manifest.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const out = resolve(root, 'build')
-const dist = resolve(root, 'dist')
+// ZN_DIST and ZN_BUILD move the output and the scratch folder, so a build
+// can run while dist/ is being uploaded somewhere (scripts/safari-sync.mjs).
+const out = resolve(root, process.env.ZN_BUILD ?? 'build')
+const dist = resolve(root, process.env.ZN_DIST ?? 'dist')
 const pkg = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'))
 const e2e = process.argv.includes('--e2e')
 
@@ -103,4 +105,4 @@ if (e2e) {
     await writeFile(resolve(dir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n')
   }
 }
-console.log(`Built ${pkg.version} for ${targets.join(', ')}${e2e ? ' and the e2e variants' : ''} in dist/`)
+console.log(`Built ${pkg.version} for ${targets.join(', ')}${e2e ? ' and the e2e variants' : ''} in ${relative(root, dist) || '.'}/`)

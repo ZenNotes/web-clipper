@@ -1,0 +1,484 @@
+{
+  "default-configuration": "Release",
+  "configurations": [
+    "Debug",
+    "Release",
+  ],
+  "localizations": {
+    "development": "en",
+    "supported": [
+      "Base",
+    ],
+  },
+  "files": [
+    {
+      "kind": "group",
+      "path": "Shared (App)",
+      "children": [
+        {
+          "path": "ViewController.swift",
+          "target-membership": [
+            "ZenNotes Web Clipper (iOS)/compile-sources",
+            "ZenNotes Web Clipper (macOS)/compile-sources",
+          ],
+        }, {
+          "path": "Assets.xcassets",
+          "target-membership": [
+            "ZenNotes Web Clipper (iOS)/resources",
+            "ZenNotes Web Clipper (macOS)/resources",
+          ],
+        }, {
+          "kind": "group",
+          "path": "Resources",
+          "children": [
+            {
+              "kind": "variant-group",
+              "name": "Main.html",
+              "target-membership": [
+                "ZenNotes Web Clipper (iOS)/resources",
+                "ZenNotes Web Clipper (macOS)/resources",
+              ],
+              "children": [
+                {
+                  "path": "Base.lproj/Main.html",
+                },
+              ],
+            }, {
+              "path": "Icon.png",
+              "target-membership": [
+                "ZenNotes Web Clipper (iOS)/resources",
+                "ZenNotes Web Clipper (macOS)/resources",
+              ],
+            }, {
+              "path": "Style.css",
+              "target-membership": [
+                "ZenNotes Web Clipper (iOS)/resources",
+                "ZenNotes Web Clipper (macOS)/resources",
+              ],
+            }, {
+              "path": "Script.js",
+              "target-membership": [
+                "ZenNotes Web Clipper (iOS)/resources",
+                "ZenNotes Web Clipper (macOS)/resources",
+              ],
+            },
+          ],
+        },
+      ],
+    }, {
+      "kind": "group",
+      "path": "Shared (Extension)",
+      "children": [
+        {
+          "kind": "group",
+          "path": "<PROJECT>/Shared (Extension)",
+          "name": "Resources",
+          "children": [
+            {
+              "path": "Resources/LICENSE",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/assets",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/background.js",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/content.js",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/icons",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/manifest.json",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/offer",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/offscreen",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/popup",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/restore.js",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            }, {
+              "path": "Resources/settings",
+              "target-membership": [
+                "ZenNotes Web Clipper Extension (iOS)/resources",
+                "ZenNotes Web Clipper Extension (macOS)/resources",
+              ],
+            },
+          ],
+        }, {
+          "path": "SafariWebExtensionHandler.swift",
+          "target-membership": [
+            "ZenNotes Web Clipper Extension (iOS)/compile-sources",
+            "ZenNotes Web Clipper Extension (macOS)/compile-sources",
+          ],
+        },
+      ],
+    }, {
+      "kind": "group",
+      "path": "iOS (App)",
+      "children": [
+        { "path": "AppDelegate.swift", "target-membership": [ "ZenNotes Web Clipper (iOS)/compile-sources" ] },
+        { "path": "SceneDelegate.swift", "target-membership": [ "ZenNotes Web Clipper (iOS)/compile-sources" ] },
+        {
+          "kind": "variant-group",
+          "name": "LaunchScreen.storyboard",
+          "target-membership": [
+            "ZenNotes Web Clipper (iOS)/resources",
+          ],
+          "children": [
+            {
+              "path": "Base.lproj/LaunchScreen.storyboard",
+            },
+          ],
+        }, {
+          "kind": "variant-group",
+          "name": "Main.storyboard",
+          "target-membership": [
+            "ZenNotes Web Clipper (iOS)/resources",
+          ],
+          "children": [
+            {
+              "path": "Base.lproj/Main.storyboard",
+            },
+          ],
+        },
+        { "path": "Info.plist" },
+      ],
+    }, {
+      "kind": "group",
+      "path": "macOS (App)",
+      "children": [
+        { "path": "AppDelegate.swift", "target-membership": [ "ZenNotes Web Clipper (macOS)/compile-sources" ] },
+        {
+          "kind": "variant-group",
+          "name": "Main.storyboard",
+          "target-membership": [
+            "ZenNotes Web Clipper (macOS)/resources",
+          ],
+          "children": [
+            {
+              "path": "Base.lproj/Main.storyboard",
+            },
+          ],
+        },
+        { "path": "Info.plist" },
+      ],
+    }, {
+      "kind": "group",
+      "path": "iOS (Extension)",
+      "children": [
+        { "path": "Info.plist" },
+      ],
+    }, {
+      "kind": "group",
+      "path": "macOS (Extension)",
+      "children": [
+        { "path": "Info.plist" },
+      ],
+    }, {
+      "kind": "group",
+      "name": "Products",
+      "children": [
+        { "path": "<PRODUCTS>/ZenNotes Web Clipper.app", "id": "9B03371930A27201007FD436", "type": "wrapper.application", "index": false },
+        { "path": "<PRODUCTS>/ZenNotes Web Clipper.app", "id": "9B03372B30A27202007FD436", "type": "wrapper.application", "index": false },
+        { "path": "<PRODUCTS>/ZenNotes Web Clipper Extension.appex", "id": "9B03373730A27202007FD436", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "ZenNotes Web Clipper (iOS)/copy/Embed Foundation Extensions", "header-preservation": "remove-on-copy" } ] },
+        { "path": "<PRODUCTS>/ZenNotes Web Clipper Extension.appex", "id": "9B03374130A27202007FD436", "type": "wrapper.app-extension", "index": false, "target-membership": [ { "build-phase": "ZenNotes Web Clipper (macOS)/copy/Embed Foundation Extensions", "header-preservation": "remove-on-copy" } ] },
+      ],
+    },
+  ],
+  "targets": [
+    {
+      "name": "ZenNotes Web Clipper (iOS)",
+      "id": "9B03371830A27201007FD436",
+      "product": "id:9B03371930A27201007FD436",
+      "product-type": "application",
+      "dependencies": [
+        "ZenNotes Web Clipper Extension (iOS)",
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+        {
+          "kind": "copy",
+          "name": "Embed Foundation Extensions",
+          "bundle-base-path": "plugins-directory",
+        },
+      ],
+      "build-settings": {
+        "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+        "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "2",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "iOS (App)/Info.plist",
+        "INFOPLIST_KEY_CFBundleDisplayName": "ZenNotes Web Clipper",
+        "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption": "NO",
+        "INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents": "YES",
+        "INFOPLIST_KEY_UILaunchStoryboardName": "LaunchScreen",
+        "INFOPLIST_KEY_UIMainStoryboardFile": "Main",
+        "INFOPLIST_KEY_UISupportedInterfaceOrientations": "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight",
+        "INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad": "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/Frameworks",
+        ],
+        "MARKETING_VERSION": "0.1.0",
+        "OTHER_LDFLAGS": [
+          "-framework",
+          "SafariServices",
+          "-framework",
+          "WebKit",
+        ],
+        "PRODUCT_BUNDLE_IDENTIFIER": "md.zennotes.webclipper",
+        "PRODUCT_NAME": "ZenNotes Web Clipper",
+        "SDKROOT": "iphoneos",
+        "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_DEFAULT_ACTOR_ISOLATION": "MainActor",
+        "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2",
+        "VALIDATE_PRODUCT[config=Release]": "YES",
+      },
+    }, {
+      "name": "ZenNotes Web Clipper (macOS)",
+      "id": "9B03372A30A27202007FD436",
+      "product": "id:9B03372B30A27202007FD436",
+      "product-type": "application",
+      "dependencies": [
+        "ZenNotes Web Clipper Extension (macOS)",
+      ],
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+        {
+          "kind": "copy",
+          "name": "Embed Foundation Extensions",
+          "bundle-base-path": "plugins-directory",
+        },
+      ],
+      "build-settings": {
+        "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+        "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "2",
+        "ENABLE_APP_SANDBOX": "YES",
+        "ENABLE_HARDENED_RUNTIME": "YES",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "macOS (App)/Info.plist",
+        "INFOPLIST_KEY_CFBundleDisplayName": "ZenNotes Web Clipper",
+        "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption": "NO",
+        "INFOPLIST_KEY_LSApplicationCategoryType": "public.app-category.productivity",
+        "INFOPLIST_KEY_NSMainStoryboardFile": "Main",
+        "INFOPLIST_KEY_NSPrincipalClass": "NSApplication",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/../Frameworks",
+        ],
+        "MACOSX_DEPLOYMENT_TARGET": "13.0",
+        "MARKETING_VERSION": "0.1.0",
+        "OTHER_LDFLAGS": [
+          "-framework",
+          "SafariServices",
+          "-framework",
+          "WebKit",
+        ],
+        "PRODUCT_BUNDLE_IDENTIFIER": "md.zennotes.webclipper",
+        "PRODUCT_NAME": "ZenNotes Web Clipper",
+        "SDKROOT": "macosx",
+        "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_DEFAULT_ACTOR_ISOLATION": "MainActor",
+        "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
+        "SWIFT_VERSION": "5.0",
+      },
+    }, {
+      "name": "ZenNotes Web Clipper Extension (iOS)",
+      "id": "9B03373630A27202007FD436",
+      "product": "id:9B03373730A27202007FD436",
+      "product-type": "app-extension",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "2",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "iOS (Extension)/Info.plist",
+        "INFOPLIST_KEY_CFBundleDisplayName": "ZenNotes Web Clipper",
+        "INFOPLIST_KEY_NSHumanReadableCopyright": "Copyright 2026 Lumary Labs LLC",
+        "IPHONEOS_DEPLOYMENT_TARGET": "17.0",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/Frameworks",
+          "@executable_path/../../Frameworks",
+        ],
+        "MARKETING_VERSION": "0.1.0",
+        "OTHER_LDFLAGS": [
+          "-framework",
+          "SafariServices",
+        ],
+        "PRODUCT_BUNDLE_IDENTIFIER": "md.zennotes.webclipper.extension",
+        "PRODUCT_NAME": "ZenNotes Web Clipper Extension",
+        "SDKROOT": "iphoneos",
+        "SKIP_INSTALL": "YES",
+        "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
+        "SWIFT_VERSION": "5.0",
+        "TARGETED_DEVICE_FAMILY": "1,2",
+        "VALIDATE_PRODUCT[config=Release]": "YES",
+      },
+    }, {
+      "name": "ZenNotes Web Clipper Extension (macOS)",
+      "id": "9B03374030A27202007FD436",
+      "product": "id:9B03374130A27202007FD436",
+      "product-type": "app-extension",
+      "build-phases": [
+        "compile-sources",
+        "frameworks",
+        "resources",
+      ],
+      "build-settings": {
+        "CODE_SIGN_STYLE": "Automatic",
+        "CURRENT_PROJECT_VERSION": "2",
+        "ENABLE_APP_SANDBOX": "YES",
+        "ENABLE_HARDENED_RUNTIME": "YES",
+        "GENERATE_INFOPLIST_FILE": "YES",
+        "INFOPLIST_FILE": "macOS (Extension)/Info.plist",
+        "INFOPLIST_KEY_CFBundleDisplayName": "ZenNotes Web Clipper",
+        "INFOPLIST_KEY_NSHumanReadableCopyright": "Copyright 2026 Lumary Labs LLC",
+        "LD_RUNPATH_SEARCH_PATHS": [
+          "$(inherited)",
+          "@executable_path/../Frameworks",
+          "@executable_path/../../../../Frameworks",
+        ],
+        "MACOSX_DEPLOYMENT_TARGET": "13.0",
+        "MARKETING_VERSION": "0.1.0",
+        "OTHER_LDFLAGS": [
+          "-framework",
+          "SafariServices",
+        ],
+        "PRODUCT_BUNDLE_IDENTIFIER": "md.zennotes.webclipper.extension",
+        "PRODUCT_NAME": "ZenNotes Web Clipper Extension",
+        "SDKROOT": "macosx",
+        "SKIP_INSTALL": "YES",
+        "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
+        "SWIFT_APPROACHABLE_CONCURRENCY": "YES",
+        "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
+        "SWIFT_VERSION": "5.0",
+      },
+    },
+  ],
+  "build-settings": {
+    "ALWAYS_SEARCH_USER_PATHS": "NO",
+    "CODE_SIGN_STYLE": "Automatic",
+    "DEVELOPMENT_TEAM": "WYY7PK57DM",
+    "ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS": "YES",
+    "CLANG_ANALYZER_NONNULL": "YES",
+    "CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION": "YES_AGGRESSIVE",
+    "CLANG_CXX_LANGUAGE_STANDARD": "gnu++20",
+    "CLANG_ENABLE_MODULES": "YES",
+    "CLANG_ENABLE_OBJC_ARC": "YES",
+    "CLANG_ENABLE_OBJC_WEAK": "YES",
+    "CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING": "YES",
+    "CLANG_WARN_BOOL_CONVERSION": "YES",
+    "CLANG_WARN_COMMA": "YES",
+    "CLANG_WARN_CONSTANT_CONVERSION": "YES",
+    "CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS": "YES",
+    "CLANG_WARN_DIRECT_OBJC_ISA_USAGE": "YES_ERROR",
+    "CLANG_WARN_DOCUMENTATION_COMMENTS": "YES",
+    "CLANG_WARN_EMPTY_BODY": "YES",
+    "CLANG_WARN_ENUM_CONVERSION": "YES",
+    "CLANG_WARN_INFINITE_RECURSION": "YES",
+    "CLANG_WARN_INT_CONVERSION": "YES",
+    "CLANG_WARN_NON_LITERAL_NULL_CONVERSION": "YES",
+    "CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF": "YES",
+    "CLANG_WARN_OBJC_LITERAL_CONVERSION": "YES",
+    "CLANG_WARN_OBJC_ROOT_CLASS": "YES_ERROR",
+    "CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER": "YES",
+    "CLANG_WARN_RANGE_LOOP_ANALYSIS": "YES",
+    "CLANG_WARN_STRICT_PROTOTYPES": "YES",
+    "CLANG_WARN_SUSPICIOUS_MOVE": "YES",
+    "CLANG_WARN_UNGUARDED_AVAILABILITY": "YES_AGGRESSIVE",
+    "CLANG_WARN_UNREACHABLE_CODE": "YES",
+    "CLANG_WARN__DUPLICATE_METHOD_MATCH": "YES",
+    "COPY_PHASE_STRIP": "NO",
+    "DEBUG_INFORMATION_FORMAT[config=Debug]": "dwarf",
+    "DEBUG_INFORMATION_FORMAT[config=Release]": "dwarf-with-dsym",
+    "ENABLE_NS_ASSERTIONS[config=Release]": "NO",
+    "ENABLE_STRICT_OBJC_MSGSEND": "YES",
+    "ENABLE_TESTABILITY[config=Debug]": "YES",
+    "ENABLE_USER_SCRIPT_SANDBOXING": "YES",
+    "GCC_C_LANGUAGE_STANDARD": "gnu17",
+    "GCC_DYNAMIC_NO_PIC[config=Debug]": "NO",
+    "GCC_NO_COMMON_BLOCKS": "YES",
+    "GCC_OPTIMIZATION_LEVEL[config=Debug]": "0",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=Debug]": [
+      "DEBUG=1",
+      "$(inherited)",
+    ],
+    "GCC_WARN_64_TO_32_BIT_CONVERSION": "YES",
+    "GCC_WARN_ABOUT_RETURN_TYPE": "YES_ERROR",
+    "GCC_WARN_UNDECLARED_SELECTOR": "YES",
+    "GCC_WARN_UNINITIALIZED_AUTOS": "YES_AGGRESSIVE",
+    "GCC_WARN_UNUSED_FUNCTION": "YES",
+    "GCC_WARN_UNUSED_VARIABLE": "YES",
+    "LOCALIZATION_PREFERS_STRING_CATALOGS": "YES",
+    "MTL_ENABLE_DEBUG_INFO[config=Debug]": "INCLUDE_SOURCE",
+    "MTL_ENABLE_DEBUG_INFO[config=Release]": "NO",
+    "MTL_FAST_MATH": "YES",
+    "ONLY_ACTIVE_ARCH[config=Debug]": "YES",
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS[config=Debug]": "DEBUG $(inherited)",
+    "SWIFT_COMPILATION_MODE[config=Release]": "wholemodule",
+    "SWIFT_OPTIMIZATION_LEVEL[config=Debug]": "-Onone",
+  },
+  "last-upgrade": "27.2",
+  "last-swift-update": "27.2",
+}

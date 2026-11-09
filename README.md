@@ -8,8 +8,9 @@ Chrome, Edge, Brave, Arc, Firefox (desktop and Android) and Safari (Mac, iPhone,
 the same source; each gets its own manifest.
 
 > **Status: in development, not released.** The ZenNotes desktop app learns these links in an
-> upcoming release, with the phone apps and Safari after it. Until then you can load the
-> extension unpacked (below), but a released ZenNotes will not act on its links yet.
+> upcoming release, with the phone apps after it. Until then you can load the extension
+> unpacked (below), but a released ZenNotes will not act on its links yet. Safari gets the
+> extension as its own App Store app, built from `safari/` ([Safari app](#safari-app-mac-iphone-ipad)).
 
 ## How a clip reaches ZenNotes
 
@@ -27,9 +28,12 @@ The contract is normative in the ZenNotes repo (`docs/web-clipper-link.md`), wit
 in `docs/web-clipper-link.fixtures.json`. `npm run sync-fixtures` copies them into
 `test/fixtures/`, and the link builder's tests run every case.
 
-Safari has its own path when the app's native handler is present: the extension sends
-`{ type: 'clip', vault, file, text, behavior, silent }` with `runtime.sendNativeMessage`, then
-opens `zennotes://open` to wake the app. Without the handler it uses the clipboard path above.
+Safari has room for its own path: the extension first sends
+`{ type: 'clip', vault, file, text, behavior, silent }` with `runtime.sendNativeMessage`, and
+when the native handler accepts it, opens `zennotes://open` to wake the app. The Safari app's
+handler declines every clip for now (handing a clip straight to the ZenNotes apps needs their
+side first), so Safari on the Mac uses the clipboard path above, and Safari on iPhone and iPad
+only copies the note (see [Safari app](#safari-app-mac-iphone-ipad)).
 
 ## Features
 
@@ -138,15 +142,84 @@ npm run run:firefox
 npx web-ext run --source-dir dist/firefox -t firefox-android --android-device <device-id>
 ```
 
-**Safari**: wrap the build in an Xcode project, then run the app target once:
+**Safari**: Safari loads extensions only from an app, so it runs from the Xcode project in
+`safari/`; see [Safari app](#safari-app-mac-iphone-ipad).
+
+## Safari app (Mac, iPhone, iPad)
+
+Safari gets the extension inside its own app, **ZenNotes Web Clipper**, one App Store record for
+macOS and iOS (universal purchase). `safari/ZenNotes Web Clipper/` is the Xcode project, made once
+by `xcrun safari-web-extension-converter` and kept in git:
+
+| Target | Bundle ID | Runs on |
+|---|---|---|
+| ZenNotes Web Clipper (macOS) | `md.zennotes.webclipper` | macOS 13 and later |
+| ZenNotes Web Clipper (iOS) | `md.zennotes.webclipper` | iOS and iPadOS 17 and later |
+| ZenNotes Web Clipper Extension (macOS and iOS) | `md.zennotes.webclipper.extension` | inside the app |
+
+Signing is automatic, team Lumary Labs LLC (WYY7PK57DM). The app is a single page per platform
+(`Shared (App)/Resources`) that says how to turn the extension on: on the Mac it shows whether
+the extension is on, and Return opens Safari Settings. No account, nothing tracked.
+
+After any change under `src/` (or a version bump in `package.json`), refresh the extension inside
+the project with one command:
 
 ```bash
-xcrun safari-web-extension-converter dist/safari --project-location build/safari --no-open
+npm run safari:sync
 ```
 
-In Safari, turn on Settings, Advanced, Show features for web developers, then Develop, Allow
-Unsigned Extensions, and enable the extension in Settings, Extensions. The real Safari
-container (with the native clip handler) ships inside the ZenNotes app.
+It builds into `.safari-build/` (never touching `dist/`), replaces `Shared (Extension)/Resources`
+with the Safari build, lists the new files in the project, and sets the app version to the
+extension's. Commit the result with the change that caused it.
+
+**On the Mac**: open `safari/ZenNotes Web Clipper/ZenNotes Web Clipper.xcodeproj`, pick the
+`ZenNotes Web Clipper (macOS)` scheme and Run. Turn the extension on in Safari Settings,
+Extensions (if a local build does not show up there, turn on Settings, Advanced, Show features
+for web developers, then Develop, Allow Unsigned Extensions), and allow it on the sites you clip.
+
+**On iPhone and iPad**: pick the `ZenNotes Web Clipper (iOS)` scheme and a simulator or device,
+Run, then turn the extension on in Settings, Apps, Safari, Extensions (or in Safari: the
+extensions button in the address bar, Manage Extensions) and allow it on all websites. The
+popup is a sheet on iPhone and a popover on iPad.
+
+**How a clip leaves Safari:**
+
+- **Mac**: as in other browsers. The note goes on the clipboard and the `zennotes://` link opens
+  the ZenNotes app, which files it.
+- **iPhone and iPad**: the note is only copied, and the clipper says so ("Copied. Paste it into a
+  note in ZenNotes."). The released ZenNotes phone app reads every `zennotes://new` link as its
+  widget's "new note" action, so a clip link would open a blank note and drop the clip. Settings,
+  General, "Open ZenNotes after clipping" switches to the clipboard and link path; turn it on (or
+  make it the default) once a ZenNotes phone release reads clip links. **The iOS handoff depends
+  on the phone app**: until it reads the links (or drains an App Group inbox that the native
+  handler fills, the `sendNativeMessage` path above), copying is the honest default.
+
+**What Safari does differently:**
+
+- Safari manages site access itself, in its own settings. On iPhone and iPad,
+  `permissions.request` answers no at once without asking, so in Safari the one-time offer to
+  keep highlights is not shown (the Highlighter settings say to allow the extension on all
+  websites instead) and the Interpreter does not wait for a grant: Safari's own site access
+  decides whether the request goes through.
+- iPhone and iPad have no extension keyboard shortcuts and no right-click menu. Highlighting is
+  select, then Highlight in the bar at the bottom of the page; tapping a highlight does not
+  remove it there (Clear in the same bar does).
+- Key hints are hidden on touch screens.
+- Shortcuts are fixed in Safari (it does not let extensions change them).
+
+**App Store builds**: archive both platforms. With no `-archivePath`, the archives land where
+Xcode's Organizer lists them, and nothing is uploaded until you choose Distribute App there:
+
+```bash
+xcodebuild archive -project "safari/ZenNotes Web Clipper/ZenNotes Web Clipper.xcodeproj" -scheme "ZenNotes Web Clipper (iOS)" -destination "generic/platform=iOS" -allowProvisioningUpdates
+```
+
+```bash
+xcodebuild archive -project "safari/ZenNotes Web Clipper/ZenNotes Web Clipper.xcodeproj" -scheme "ZenNotes Web Clipper (macOS)" -destination "generic/platform=macOS" -allowProvisioningUpdates
+```
+
+Raise `CURRENT_PROJECT_VERSION` (the build number) for every upload. Listing text, App Privacy
+answers and screenshots are in `store/safari/`.
 
 ## How to test locally
 
@@ -209,8 +282,10 @@ src/background   shortcuts, menus, quick clip, Safari native handoff
 src/offscreen    Chromium clipboard writer for quick clip
 src/popup        popup (React)
 src/settings     settings page (React)
-scripts          build, manifests, zips, fixture sync, end-to-end runs
+scripts          build, manifests, zips, fixture sync, end-to-end runs, Safari sync, store images
 test             vitest suites and fixture pages
+safari           the Safari app's Xcode project (macOS and iOS), refreshed by npm run safari:sync
+store            store listings, privacy answers and images (store/safari for the App Store)
 ```
 
 ## License

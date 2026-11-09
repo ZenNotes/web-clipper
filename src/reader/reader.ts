@@ -57,6 +57,7 @@ kbd { font: 11px "JetBrains Mono","SF Mono",Menlo,monospace; border: 1px solid r
 .outline a:hover { color: rgb(${p.fg}); }
 .outline .h3 { padding-left: 12px; }
 @media (max-width: 1100px) { .outline { display: none; } }
+@media (hover: none) and (pointer: coarse) { .keys { display: none; } }
 article { width: 100%; max-width: ${r.maxWidth}px; }
 h1.title { font-size: 2em; line-height: 1.2; margin: 0 0 .4em; color: rgb(${p.fg1}); }
 .byline { font: 13px -apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif; color: rgb(${p.grey}); margin-bottom: 2em; }
@@ -128,10 +129,10 @@ export class ReaderView {
     const site = this.doc.createElement('span')
     site.textContent = [result.site, result.domain].filter(Boolean).join(' · ')
     const right = this.doc.createElement('span')
-    right.innerHTML = '<kbd>-</kbd> <kbd>=</kbd> size &nbsp; <kbd>O</kbd> outline &nbsp; '
+    right.innerHTML = '<span class="keys"><kbd>-</kbd> <kbd>=</kbd> size &nbsp; <kbd>O</kbd> outline &nbsp; </span>'
     const close = this.doc.createElement('button')
     close.type = 'button'
-    close.textContent = 'Close (Esc)'
+    close.textContent = win.matchMedia?.('(hover: none) and (pointer: coarse)').matches ? 'Close' : 'Close (Esc)'
     close.addEventListener('click', () => this.close())
     right.appendChild(close)
     top.append(site, right)

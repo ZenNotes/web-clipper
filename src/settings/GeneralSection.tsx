@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ext, flavor } from '../shared/ext'
+import { ext, flavor, platformOs } from '../shared/ext'
 import type { Settings } from '../shared/types'
 import { Button, Field, Kbd, Select, Toggle } from '../ui/controls'
 import { SectionTitle, type Update } from './common'
@@ -7,9 +7,11 @@ import { SectionTitle, type Update } from './common'
 export function GeneralSection({ settings, update }: { settings: Settings; update: Update }) {
   const [draft, setDraft] = useState('')
   const [commands, setCommands] = useState<chrome.commands.Command[]>([])
+  const [os, setOs] = useState('')
 
   useEffect(() => {
     void ext.commands?.getAll?.().then(setCommands).catch(() => setCommands([]))
+    void platformOs().then(setOs)
   }, [])
 
   const addVault = () => {
@@ -95,6 +97,15 @@ export function GeneralSection({ settings, update }: { settings: Settings; updat
           checked={settings.preferInline}
           onChange={(v) => update((s) => ({ ...s, preferInline: v }))}
         />
+        {os === 'ios' && (
+          <Toggle
+            id="ios-open"
+            label="Open ZenNotes after clipping"
+            hint="Needs a ZenNotes version that reads clips. Off: each clip is copied, ready to paste."
+            checked={settings.iosOpenApp}
+            onChange={(v) => update((s) => ({ ...s, iosOpenApp: v }))}
+          />
+        )}
       </section>
 
       <section>

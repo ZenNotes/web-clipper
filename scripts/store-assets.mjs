@@ -5,6 +5,13 @@
 // (nothing here clips), and the profile is a throwaway one.
 //
 //   npm run build:e2e && node scripts/store-assets.mjs
+//
+// --mac renders the Mac App Store set instead: the same four screenshots at
+// 2560x1600 plus the Safari app's own page, into store/safari/screenshots/mac,
+// from an e2e build in .safari-build/dist (so dist/ is left alone):
+//
+//   ZN_DIST=.safari-build/dist ZN_BUILD=.safari-build/build node scripts/build.mjs --e2e
+//   node scripts/store-assets.mjs --mac
 
 import { spawn } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -18,7 +25,11 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 // the reader and the note show a site, not a test address.
 const HOST = 'margin-notes.example'
 const store = resolve(root, 'store')
-mkdirSync(join(store, 'screenshots'), { recursive: true })
+const MAC = process.argv.includes('--mac')
+const SCALE = MAC ? 2 : 1
+const shots = MAC ? join(store, 'safari/screenshots/mac') : join(store, 'screenshots')
+const built = resolve(root, MAC ? '.safari-build/dist' : 'dist', 'chrome-e2e')
+mkdirSync(shots, { recursive: true })
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 function findChrome() {
@@ -44,7 +55,7 @@ const origin = `http://${HOST}`
 
 const profile = mkdtempSync(join(tmpdir(), 'zn-clipper-store-'))
 const extDir = join(profile, 'extension')
-cpSync(resolve(root, 'dist/chrome-e2e'), extDir, { recursive: true })
+cpSync(built, extDir, { recursive: true })
 const manifest = JSON.parse(readFileSync(join(extDir, 'manifest.json'), 'utf8'))
 manifest.host_permissions = [`http://${HOST}/*`]
 writeFileSync(join(extDir, 'manifest.json'), JSON.stringify(manifest, null, 2))
@@ -101,7 +112,7 @@ async function open(url, width, height, dark = true) {
   const { targetId } = await cdp('Target.createTarget', { url })
   const { sessionId } = await cdp('Target.attachToTarget', { targetId, flatten: true })
   await cdp('Runtime.enable', {}, sessionId)
-  await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false }, sessionId)
+  await cdp('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: SCALE, mobile: false }, sessionId)
   await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: dark ? 'dark' : 'light' }] }, sessionId)
   return { targetId, s: sessionId }
 }
@@ -179,7 +190,7 @@ try {
   await waitFor(() => evaluate(page.s, `document.querySelectorAll('mark[data-zn-hl]').length >= 2`), 'two highlights')
   await evaluate(page.s, 'window.scrollTo(0, 70), true')
   await sleep(300)
-  await shot(page.s, join(store, 'screenshots/02-highlighter.png'))
+  await shot(page.s, join(shots, '02-highlighter.png'))
   await evaluate(sw.s, `chrome.tabs.sendMessage(${tabId}, { type: 'zn:highlighter', action: 'off' })`)
 
   // 01: the popup with the Markdown preview, over the article.
@@ -193,7 +204,7 @@ try {
   await sleep(400)
   // The real popup is as tall as its content.
   const popupHeight = Math.ceil(await evaluate(popup.s, `document.querySelector('#root > div').getBoundingClientRect().height`))
-  await cdp('Emulation.setDeviceMetricsOverride', { width: 440, height: popupHeight, deviceScaleFactor: 1, mobile: false }, popup.s)
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 440, height: popupHeight, deviceScaleFactor: SCALE, mobile: false }, popup.s)
   await sleep(300)
   const fg = (await cdp('Page.captureScreenshot', { format: 'png' }, popup.s)).data
   const compose = await open('about:blank', 1280, 800, true)
@@ -208,47 +219,64 @@ try {
     })()`
   )
   await sleep(300)
-  await shot(compose.s, join(store, 'screenshots/01-popup.png'))
+  await shot(compose.s, join(shots, '01-popup.png'))
 
   // 03: reader view.
   await evaluate(sw.s, `chrome.tabs.sendMessage(${tabId}, { type: 'zn:reader', action: 'toggle' })`)
   await sleep(500)
-  await shot(page.s, join(store, 'screenshots/03-reader.png'))
+  await shot(page.s, join(shots, '03-reader.png'))
 
   // 04: template settings.
   const settings = await open(`${ext}/settings/settings.html#templates`, 1280, 800, true)
   await waitFor(() => evaluate(settings.s, `document.querySelector('#t-content')?.value`), 'the settings page')
   await sleep(300)
-  await shot(settings.s, join(store, 'screenshots/04-templates.png'))
+  await shot(settings.s, join(shots, '04-templates.png'))
+
+  if (MAC) {
+    // 05: the Safari app's own page, as the Mac app shows it with the
+    // extension still off.
+    const app = await open(
+      'file://' + resolve(root, 'safari/ZenNotes Web Clipper/Shared (App)/Resources/Base.lproj/Main.html'),
+      1280,
+      800,
+      true
+    )
+    await waitFor(() => evaluate(app.s, `typeof show === 'function'`), 'the app page')
+    await evaluate(app.s, `show('mac', false), true`)
+    await sleep(300)
+    await shot(app.s, join(shots, '05-app.png'))
+  }
 
   // The promo tile and the Edge logo, from the app icon on the ZenNotes dark background.
-  const icon = readFileSync(join(source, 'icon-512.png')).toString('base64')
-  const tile = await open('about:blank', 440, 280, true)
-  await evaluate(
-    tile.s,
-    `(() => {
-      document.body.style.cssText = 'margin:0;width:440px;height:280px;overflow:hidden'
-      document.body.innerHTML = '<div style="width:440px;height:280px;display:flex;align-items:center;gap:22px;padding:0 34px;box-sizing:border-box;background:radial-gradient(120% 140% at 0% 0%, rgb(60 44 30) 0%, rgb(29 32 33) 55%);font-family:-apple-system,BlinkMacSystemFont,Inter,system-ui,sans-serif">'
-        + '<img src="data:image/png;base64,${icon}" style="width:118px;height:118px;flex:none">'
-        + '<div><div style="font-size:15px;letter-spacing:0.14em;text-transform:uppercase;color:rgb(231 138 78);font-weight:600">ZenNotes</div>'
-        + '<div style="font-size:32px;line-height:1.1;font-weight:700;color:rgb(235 219 178);margin-top:6px">Web Clipper</div>'
-        + '<div style="font-size:14px;line-height:1.4;color:rgb(168 153 132);margin-top:10px;white-space:nowrap">Any page, a clean Markdown note.</div></div></div>'
-      return true
-    })()`
-  )
-  await sleep(300)
-  await shot(tile.s, join(store, 'promo-440x280.png'))
-  const logo = await open('about:blank', 300, 300, true)
-  await evaluate(
-    logo.s,
-    `(() => {
-      document.body.style.cssText = 'margin:0;width:300px;height:300px;overflow:hidden'
-      document.body.innerHTML = '<div style="width:300px;height:300px;display:flex;align-items:center;justify-content:center;background:rgb(29 32 33)"><img src="data:image/png;base64,${icon}" style="width:268px;height:268px"></div>'
-      return true
-    })()`
-  )
-  await sleep(300)
-  await shot(logo.s, join(store, 'logo-300.png'))
+  if (!MAC) {
+    const icon = readFileSync(join(source, 'icon-512.png')).toString('base64')
+    const tile = await open('about:blank', 440, 280, true)
+    await evaluate(
+      tile.s,
+      `(() => {
+        document.body.style.cssText = 'margin:0;width:440px;height:280px;overflow:hidden'
+        document.body.innerHTML = '<div style="width:440px;height:280px;display:flex;align-items:center;gap:22px;padding:0 34px;box-sizing:border-box;background:radial-gradient(120% 140% at 0% 0%, rgb(60 44 30) 0%, rgb(29 32 33) 55%);font-family:-apple-system,BlinkMacSystemFont,Inter,system-ui,sans-serif">'
+          + '<img src="data:image/png;base64,${icon}" style="width:118px;height:118px;flex:none">'
+          + '<div><div style="font-size:15px;letter-spacing:0.14em;text-transform:uppercase;color:rgb(231 138 78);font-weight:600">ZenNotes</div>'
+          + '<div style="font-size:32px;line-height:1.1;font-weight:700;color:rgb(235 219 178);margin-top:6px">Web Clipper</div>'
+          + '<div style="font-size:14px;line-height:1.4;color:rgb(168 153 132);margin-top:10px;white-space:nowrap">Any page, a clean Markdown note.</div></div></div>'
+        return true
+      })()`
+    )
+    await sleep(300)
+    await shot(tile.s, join(store, 'promo-440x280.png'))
+    const logo = await open('about:blank', 300, 300, true)
+    await evaluate(
+      logo.s,
+      `(() => {
+        document.body.style.cssText = 'margin:0;width:300px;height:300px;overflow:hidden'
+        document.body.innerHTML = '<div style="width:300px;height:300px;display:flex;align-items:center;justify-content:center;background:rgb(29 32 33)"><img src="data:image/png;base64,${icon}" style="width:268px;height:268px"></div>'
+        return true
+      })()`
+    )
+    await sleep(300)
+    await shot(logo.s, join(store, 'logo-300.png'))
+  }
 } finally {
   ws.close()
   chrome.kill()
