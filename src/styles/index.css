@@ -1,0 +1,79 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  @apply bg-paper-100 text-ink-900 font-sans text-sm antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--z-accent) / 0.8);
+  outline-offset: 1px;
+}
+
+@layer components {
+  .zn-input {
+    @apply w-full rounded-md border border-paper-400 bg-paper-50 px-2 py-1 text-sm text-ink-900 placeholder:text-ink-400;
+  }
+
+  .zn-input:focus {
+    @apply border-accent outline-none;
+  }
+
+  .zn-label {
+    @apply mb-1 block text-2xs font-medium uppercase tracking-wide text-ink-500;
+  }
+
+  .zn-kbd {
+    @apply rounded border border-paper-400 bg-paper-200 px-1 font-mono text-2xs text-ink-600;
+  }
+
+  .zn-prose {
+    @apply text-sm leading-relaxed text-ink-900;
+  }
+  .zn-prose h1,
+  .zn-prose h2,
+  .zn-prose h3 {
+    @apply mb-2 mt-3 font-semibold text-ink-800;
+  }
+  .zn-prose h1 {
+    @apply text-lg;
+  }
+  .zn-prose h2 {
+    @apply text-base;
+  }
+  .zn-prose p,
+  .zn-prose ul,
+  .zn-prose ol,
+  .zn-prose blockquote,
+  .zn-prose pre {
+    @apply mb-2;
+  }
+  .zn-prose ul {
+    @apply list-disc pl-5;
+  }
+  .zn-prose ol {
+    @apply list-decimal pl-5;
+  }
+  .zn-prose a {
+    @apply text-accent underline;
+  }
+  .zn-prose blockquote {
+    @apply border-l-2 border-paper-400 pl-3 text-ink-600;
+  }
+  .zn-prose code {
+    @apply rounded bg-paper-200 px-1 font-mono text-xs;
+  }
+  .zn-prose pre {
+    @apply overflow-x-auto rounded-md bg-paper-200 p-2 font-mono text-xs;
+  }
+  .zn-prose img {
+    @apply max-w-full rounded;
+  }
+  .zn-prose mark {
+    @apply rounded-sm bg-warning/30 text-ink-900;
+  }
+}

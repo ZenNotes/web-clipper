@@ -1,0 +1,105 @@
+/* ZenNotes theme tokens, copied from app-core's styles/index.css (the default
+ * light theme, light-hard, and dark-hard). Values are space-separated RGB
+ * triplets so Tailwind can apply an alpha through rgb(var(--z-*) / a).
+ * Pages set data-theme on <html> from the reader/appearance setting; with
+ * no attribute the browser's color scheme decides. */
+
+:root {
+  color-scheme: light;
+  --z-bg: 251 241 199;
+  --z-bg-softer: 249 245 215;
+  --z-bg-1: 242 229 188;
+  --z-bg-2: 229 213 173;
+  --z-bg-3: 213 196 161;
+  --z-bg-4: 189 174 147;
+
+  --z-fg: 80 73 69;
+  --z-fg-1: 60 56 54;
+  --z-fg-2: 101 71 53;
+  --z-grey-2: 90 82 76;
+  --z-grey-1: 124 111 100;
+  --z-grey-0: 146 131 116;
+  --z-grey-dim: 189 174 147;
+
+  --z-accent: 195 94 10;
+  --z-accent-soft: 180 113 9;
+  --z-accent-muted: 108 120 46;
+
+  --z-red: 193 74 74;
+  --z-green: 108 120 46;
+  --z-yellow: 180 113 9;
+  --z-blue: 69 112 122;
+  --z-purple: 148 94 128;
+  --z-aqua: 76 122 93;
+
+  --z-shadow: 42 38 32;
+  --z-radius-scale: 1;
+}
+
+:root[data-theme='light-hard'] {
+  color-scheme: light;
+  --z-bg: 249 245 215;
+  --z-bg-softer: 251 241 199;
+  --z-bg-1: 242 229 188;
+  --z-bg-2: 229 213 173;
+}
+
+:root[data-theme='dark-hard'] {
+  color-scheme: dark;
+  --z-bg: 29 32 33;
+  --z-bg-softer: 40 40 40;
+  --z-bg-1: 50 48 47;
+  --z-bg-2: 60 56 54;
+  --z-bg-3: 69 64 61;
+  --z-bg-4: 80 73 69;
+
+  --z-fg: 212 190 152;
+  --z-fg-1: 221 199 161;
+  --z-fg-2: 221 199 161;
+  --z-grey-2: 168 153 132;
+  --z-grey-1: 146 131 116;
+  --z-grey-0: 124 111 100;
+  --z-grey-dim: 80 73 69;
+
+  --z-accent: 231 138 78;
+  --z-accent-soft: 216 166 87;
+  --z-accent-muted: 169 182 101;
+
+  --z-red: 234 105 98;
+  --z-green: 169 182 101;
+  --z-yellow: 216 166 87;
+  --z-blue: 125 174 163;
+  --z-purple: 211 134 155;
+  --z-aqua: 137 180 130;
+
+  --z-shadow: 0 0 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --z-bg: 29 32 33;
+    --z-bg-softer: 40 40 40;
+    --z-bg-1: 50 48 47;
+    --z-bg-2: 60 56 54;
+    --z-bg-3: 69 64 61;
+    --z-bg-4: 80 73 69;
+    --z-fg: 212 190 152;
+    --z-fg-1: 221 199 161;
+    --z-fg-2: 221 199 161;
+    --z-grey-2: 168 153 132;
+    --z-grey-1: 146 131 116;
+    --z-grey-0: 124 111 100;
+    --z-grey-dim: 80 73 69;
+    --z-accent: 231 138 78;
+    --z-accent-soft: 216 166 87;
+    --z-accent-muted: 169 182 101;
+    --z-red: 234 105 98;
+    --z-green: 169 182 101;
+    --z-yellow: 216 166 87;
+    --z-blue: 125 174 163;
+    --z-purple: 211 134 155;
+    --z-aqua: 137 180 130;
+    --z-shadow: 0 0 0;
+  }
+}
