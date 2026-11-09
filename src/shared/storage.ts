@@ -5,7 +5,7 @@
 
 import { defaultSettings } from './defaults'
 import { ext } from './ext'
-import type { Highlight, Settings } from './types'
+import type { Highlight, Settings, Template } from './types'
 
 const SETTINGS_KEY = 'settings'
 const HL_PREFIX = 'hl:'
@@ -23,11 +23,22 @@ export function mergeSettings(raw: unknown): Settings {
     ...d,
     ...r,
     version: 1,
-    templates: Array.isArray(r.templates) && r.templates.length ? r.templates : d.templates,
+    templates: Array.isArray(r.templates) && r.templates.length ? r.templates.map(dropOldDefaultTag) : d.templates,
     highlighter: { ...d.highlighter, ...(r.highlighter ?? {}) },
     reader: { ...d.reader, ...(r.reader ?? {}) },
     interpreter: { ...d.interpreter, ...(r.interpreter ?? {}) }
   }
+}
+
+/** The first builds' default template tagged every clip `clippings`. Clips
+ *  already sit in a Clippings folder, so that property is dropped from the
+ *  default template when it is still exactly as shipped. */
+function dropOldDefaultTag(t: Template): Template {
+  if (t.id !== 'default') return t
+  const properties = t.properties.filter(
+    (p) => !(p.id === 'p-tags' && p.name === 'tags' && p.value === 'clippings' && p.type === 'multitext')
+  )
+  return properties.length === t.properties.length ? t : { ...t, properties }
 }
 
 export async function saveSettings(s: Settings): Promise<void> {

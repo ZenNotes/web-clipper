@@ -6,6 +6,9 @@ export function newId(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4)
 }
 
+/** No default tag: clips already sit in a Clippings folder, and ZenNotes
+ *  keeps tags for what a folder does not say. Empty properties are left out
+ *  of the note, so author and published appear only when the page has them. */
 export function defaultTemplate(): Template {
   return {
     id: 'default',
@@ -19,8 +22,7 @@ export function defaultTemplate(): Template {
       { id: 'p-author', name: 'author', value: '{{author|split:", "|wikilink|join:", "}}', type: 'multitext' },
       { id: 'p-published', name: 'published', value: '{{published|date:"YYYY-MM-DD"}}', type: 'date' },
       { id: 'p-created', name: 'created', value: '{{date}}', type: 'date' },
-      { id: 'p-description', name: 'description', value: '{{description}}', type: 'text' },
-      { id: 'p-tags', name: 'tags', value: 'clippings', type: 'multitext' }
+      { id: 'p-description', name: 'description', value: '{{description}}', type: 'text' }
     ],
     noteContentFormat: '{{content}}',
     triggers: [],

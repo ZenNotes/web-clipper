@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Notes app landing page</title>
+    <meta name="description" content="A landing page shaped like zennotes.org's features section: a lede, then a grid of cards." />
+    <style>
+      body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #111; color: #ddd; }
+      main { max-width: 960px; margin: 0 auto; padding: 32px; }
+      .section-head { text-align: center; margin-bottom: 32px; }
+      .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .bento > * { border: 1px solid #333; border-radius: 16px; padding: 20px; }
+      .card { display: flex; flex-direction: column; gap: 12px; }
+      .card--wide { grid-column: span 2; }
+      .icon { display: inline-flex; width: 32px; height: 32px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section id="features">
+        <header class="section-head">
+          <span class="eyebrow">Everything in one app</span>
+          <h2 class="section-title">The parts you will <em>use every day.</em></h2>
+          <p class="section-lede">
+            One keyboard-first app for capture, writing, and finding,
+            while your notes stay plain Markdown files.
+          </p>
+        </header>
+
+        <div class="bento">
+          <article class="card card--wide">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24"><path d="M4 4h16v16H4z" fill="none" stroke="currentColor" /></svg>
+            </span>
+            <h4>Plain <code>.md</code> files</h4>
+            <p>A vault is a folder. Sync it with anything, or not at all. Nothing hidden, nothing to migrate out of.</p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v18" stroke="currentColor" /></svg>
+            </span>
+            <h4>Split and preview</h4>
+            <p>Split a tab side by side, pin a reference, or pop a note into its own window.</p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" /></svg>
+            </span>
+            <h4>Search everything</h4>
+            <p>Full-text search across every note, fast enough to type through.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

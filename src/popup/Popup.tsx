@@ -56,6 +56,9 @@ export function Popup() {
   const [modelId, setModelId] = useState('')
   const [interpreted, setInterpreted] = useState(false)
   const [state, setState] = useState<ContentState | null>(null)
+  // A selection left on the page decides the content, so say so and offer
+  // the whole page: a forgotten selection must not silently shrink a clip.
+  const [selection, setSelection] = useState<'none' | 'used' | 'ignored'>('none')
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
   const nameRef = useRef<HTMLInputElement>(null)
 
@@ -68,13 +71,16 @@ export function Popup() {
   )
 
   const compile = useCallback(
-    async (s: Settings, tab: number | undefined, isLive: boolean, id?: string) => {
+    async (s: Settings, tab: number | undefined, isLive: boolean, id?: string, ignoreSelection = false) => {
       setInterpreted(false)
       if (isLive && tab !== undefined) {
-        const res = (await ext.tabs.sendMessage(tab, { type: 'zn:compile', templateId: id } satisfies ContentRequest)) as
-          | CompileResponse
-          | ContentError
+        const res = (await ext.tabs.sendMessage(tab, {
+          type: 'zn:compile',
+          templateId: id,
+          ignoreSelection
+        } satisfies ContentRequest)) as CompileResponse | ContentError
         if (!res?.ok) throw new Error(res?.error ?? 'Could not read the page.')
+        setSelection(res.page.hasSelection ? 'used' : res.page.selectionAvailable ? 'ignored' : 'none')
         setNote(res.note)
         setTemplateId(res.note.templateId)
         setVault(res.note.vault || s.defaultVault)
@@ -257,7 +263,7 @@ export function Popup() {
           onChange={(e) => {
             const id = e.target.value
             setTemplateId(id)
-            void compile(settings, tabId, live, id).catch((err) =>
+            void compile(settings, tabId, live, id, selection === 'ignored').catch((err) =>
               setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
             )
           }}
@@ -295,6 +301,22 @@ export function Popup() {
       </header>
 
       <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 py-3">
+        {selection !== 'none' && (
+          <p className="flex items-center justify-between gap-2 rounded-md bg-paper-200 px-2 py-1 text-xs text-ink-600" role="status">
+            <span>{selection === 'used' ? 'Clipping your selection.' : 'Clipping the whole page.'}</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() =>
+                void compile(settings, tabId, live, templateId, selection === 'used').catch((err) =>
+                  setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
+                )
+              }
+            >
+              {selection === 'used' ? 'Clip the whole page' : 'Clip the selection'}
+            </Button>
+          </p>
+        )}
         {!live && (
           <p className="rounded-md bg-paper-200 px-2 py-1 text-xs text-ink-600">
             The browser keeps the clipper out of this page, so only its title and address are clipped.

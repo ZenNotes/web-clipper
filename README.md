@@ -35,7 +35,10 @@ opens `zennotes://open` to wake the app. Without the handler it uses the clipboa
 
 - **Popup**: Markdown and preview, editable name, location (default `Clippings`), vault,
   properties as YAML frontmatter, and what to do with the note: a new note, the bottom or top
-  of a note, or the bottom or top of today's daily note.
+  of a note, or the bottom or top of today's daily note. A selection on the page becomes the
+  content; the popup says so and can switch to the whole page.
+- **Default template**: `source`, `created` and `description`, plus `author` and `published`
+  when the page has them. It adds no tag, since clips already sit in `Clippings`.
 - **Templates** with triggers (a URL prefix, a `/regex/`, or `schema:@Type[.key[=value]]`;
   the first match wins and the first template is the fallback), preset variables, `meta:`,
   `selector:` / `selectorHtml:`, `schema:` and prompt variables, `{% if %}`, `{% for %}` and

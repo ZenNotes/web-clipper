@@ -55,6 +55,16 @@ describe('extractPage', () => {
     expect(page.content).not.toContain('Files outlive formats')
   })
 
+  it('clips the whole page when asked to leave the selection out', () => {
+    const { doc, dom } = article()
+    const range = doc.createRange()
+    range.selectNodeContents(doc.querySelectorAll('article p')[1]!)
+    dom.window.getSelection()!.addRange(range)
+    const page = extractPage(doc, { url: ARTICLE_URL, highlights: [], contentMode: 'highlight', selectionHtml: '' })
+    expect(page.selection).toBe('')
+    expect(page.content).toContain('## Files outlive formats')
+  })
+
   it('clips only the highlights when set to replace', () => {
     const { doc } = article()
     const h: Highlight = {
@@ -106,7 +116,8 @@ describe('the default template', () => {
     expect(fm).toContain(`source: "${ARTICLE_URL}"`)
     expect(fm).toContain('published: 2026-03-14')
     expect(fm).toContain('created: 2026-11-09')
-    expect(fm).toContain('tags:\n  - clippings')
+    expect(fm).not.toContain('tags')
+    expect(fm).toContain('description: "Why notes stored as Markdown files outlive the apps that wrote them."')
     expect(fm).toMatch(/author:\n {2}- "\[\[Mira Okafor\]\]"/)
     expect(fm!.startsWith('---\n')).toBe(true)
     expect(body).toContain('## Files outlive formats')
@@ -191,5 +202,18 @@ describe('template files', () => {
   it('refuses files that hold no template', () => {
     expect(() => importTemplates('{"hello": 1}')).toThrow(/No templates/)
     expect(() => importTemplates('not json')).toThrow(/not JSON/)
+  })
+})
+
+describe('stored settings', () => {
+  it('drops the untouched old default tag, and only that', async () => {
+    const { mergeSettings } = await import('../src/shared/storage')
+    const old = { ...defaultTemplate(), properties: [...defaultTemplate().properties, { id: 'p-tags', name: 'tags', value: 'clippings', type: 'multitext' as const }] }
+    const edited = { ...old, id: 'mine' }
+    const kept = { ...old, properties: old.properties.map((p) => (p.id === 'p-tags' ? { ...p, value: 'clippings, web' } : p)) }
+    const s = mergeSettings({ templates: [old, edited] })
+    expect(s.templates[0]!.properties.some((p) => p.name === 'tags')).toBe(false)
+    expect(s.templates[1]!.properties.some((p) => p.name === 'tags')).toBe(true)
+    expect(mergeSettings({ templates: [kept] }).templates[0]!.properties.some((p) => p.name === 'tags')).toBe(true)
   })
 })

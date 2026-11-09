@@ -4,7 +4,7 @@ import type { PromptRef } from '../template/render'
 /** Messages the popup and background send to the content script. */
 export type ContentRequest =
   | { type: 'zn:ping' }
-  | { type: 'zn:compile'; templateId?: string; selectionHtml?: string }
+  | { type: 'zn:compile'; templateId?: string; selectionHtml?: string; ignoreSelection?: boolean }
   | { type: 'zn:finalize'; parts: string[]; prompts: PromptRef[]; answers: [string, unknown][] }
   | { type: 'zn:highlighter'; action: 'toggle' | 'on' | 'off' | 'clear' | 'add-selection' }
   | { type: 'zn:reader'; action: 'toggle' }
@@ -15,7 +15,9 @@ export interface CompileResponse {
   ok: true
   note: CompiledNote
   matchedTemplateId: string
-  page: { title: string; url: string; hasSelection: boolean; highlightCount: number }
+  /** hasSelection: the content is the selection. selectionAvailable: the page
+   *  has one, used or not. */
+  page: { title: string; url: string; hasSelection: boolean; selectionAvailable: boolean; highlightCount: number }
 }
 
 export interface ContentState {

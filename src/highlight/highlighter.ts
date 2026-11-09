@@ -17,13 +17,37 @@ const MARK_ATTR = 'data-zn-hl'
 const EL_ATTR = 'data-zn-hl-el'
 const STRUCTURAL = new Set(['TABLE', 'TBODY', 'THEAD', 'TFOOT', 'TR', 'UL', 'OL', 'DL', 'SELECT'])
 
+// `all: unset` first: page rules aimed at children (`.grid > *`, `mark`)
+// must not give a highlight a size, a position or a block box of its own.
 const PAGE_CSS = `
-mark[${MARK_ATTR}] { background: rgb(216 166 87 / 0.45) !important; color: inherit !important; border-radius: 2px; padding: 0; box-shadow: none; }
+mark[${MARK_ATTR}] { all: unset !important; display: inline !important; background: rgb(216 166 87 / 0.45) !important; border-radius: 2px !important; -webkit-box-decoration-break: clone !important; box-decoration-break: clone !important; }
 [${EL_ATTR}] { outline: 3px solid rgb(216 166 87 / 0.9) !important; outline-offset: 2px; }
-html[data-zn-hl-active] mark[${MARK_ATTR}], html[data-zn-hl-active] img { cursor: pointer; }
+html[data-zn-hl-active] mark[${MARK_ATTR}], html[data-zn-hl-active] img { cursor: pointer !important; }
 `
 
 const newId = () => Math.random().toString(36).slice(2, 10)
+
+/** Whether wrapping this text node in a <mark> leaves the layout as it was.
+ *  Whitespace between blocks, or directly inside a grid, flex or table box,
+ *  renders nothing; wrapped in an element it becomes a box of its own (a
+ *  grid item fills a whole cell, which once hid a card on zennotes.org).
+ *  Such whitespace is marked only between two pieces of inline content,
+ *  where it is a visible space. */
+export function drawable(node: Text): boolean {
+  const parent = node.parentElement
+  if (!parent) return false
+  if (node.data.trim()) return true
+  if (STRUCTURAL.has(parent.tagName)) return false
+  const win = node.ownerDocument.defaultView
+  const display = (el: Element) => win?.getComputedStyle(el).display ?? ''
+  if (/flex|grid|table|ruby|contents/.test(display(parent))) return false
+  const inline = (n: Node | null): boolean => {
+    if (!n) return false
+    if (n.nodeType === 3) return (n as Text).data.trim() !== ''
+    return n.nodeType === 1 && display(n as Element).startsWith('inline')
+  }
+  return inline(node.previousSibling) && inline(node.nextSibling)
+}
 
 function editable(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null
@@ -80,12 +104,13 @@ export class Highlighter {
     }
     const span = locate(body, h.anchor, h.text)
     if (!span) return
-    for (const node of splitForSpan(body, span.start, span.end)) {
-      const parent = node.parentElement
-      if (!parent || (STRUCTURAL.has(parent.tagName) && !node.data.trim())) continue
+    // Decide for every piece before wrapping any: a wrapped neighbor is an
+    // inline mark and would change the answer for the whitespace beside it.
+    const pieces = splitForSpan(body, span.start, span.end).filter(drawable)
+    for (const node of pieces) {
       const mark = this.doc.createElement('mark')
       mark.setAttribute(MARK_ATTR, h.id)
-      parent.insertBefore(mark, node)
+      node.parentElement!.insertBefore(mark, node)
       mark.appendChild(node)
     }
   }

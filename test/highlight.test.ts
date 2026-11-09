@@ -2,7 +2,8 @@ import { fakeStore } from './fake-ext'
 import { describe, expect, it } from 'vitest'
 import { JSDOM } from 'jsdom'
 import { anchorFromRange, indexText, locate } from '../src/highlight/anchor'
-import { Highlighter } from '../src/highlight/highlighter'
+import { drawable, Highlighter } from '../src/highlight/highlighter'
+import { fixtureDom } from './helpers'
 import { extractPage } from '../src/extract/extract'
 import { loadHighlights, pageKey } from '../src/shared/storage'
 
@@ -108,5 +109,45 @@ describe('Highlighter', () => {
     dom.window.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     expect(hl.active).toBe(false)
     expect(doc.querySelector('[data-zn-clipper-ui] .bar')).toBeNull()
+  })
+})
+
+describe('highlights on a grid layout', () => {
+  // zennotes.org's features grid: a drag that ended just past the lede took
+  // the whitespace before the first card, and its <mark> became a grid item
+  // that filled a whole cell with the highlight color.
+  it('never wraps whitespace that a grid or flex box would turn into a box', async () => {
+    const dom = fixtureDom('landing.html', 'https://landing.test/#features')
+    ;(globalThis as unknown as { document: Document }).document = dom.window.document
+    const doc = dom.window.document
+    const hl = new Highlighter(doc)
+    await hl.load()
+    const range = doc.createRange()
+    range.setStart(doc.querySelector('.section-lede')!.firstChild!, 0)
+    range.setEnd(doc.querySelector('.card h4')!.firstChild!, 3)
+    dom.window.getSelection()!.removeAllRanges()
+    dom.window.getSelection()!.addRange(range)
+    expect(hl.addSelection()).toBe(true)
+
+    const marks = Array.from(doc.querySelectorAll('mark[data-zn-hl]'))
+    expect(marks.length).toBeGreaterThan(0)
+    expect(marks.map((m) => m.textContent).join('')).toContain('One keyboard-first app')
+    expect(marks.map((m) => m.textContent).join('')).toContain('Pla')
+    for (const m of marks) {
+      expect(m.textContent!.trim(), 'a whitespace-only mark').not.toBe('')
+      const display = dom.window.getComputedStyle(m.parentElement!).display
+      expect(display, `mark inside ${m.parentElement!.className}`).not.toMatch(/grid|flex/)
+    }
+    // The grid still has exactly its three cards as children.
+    expect(Array.from(doc.querySelector('.bento')!.children).map((c) => c.tagName)).toEqual(['ARTICLE', 'ARTICLE', 'ARTICLE'])
+  })
+
+  it('keeps a space between inline words but not between blocks', () => {
+    const dom = new JSDOM('<body><p><b>a</b> <i>b</i></p><div><p>x</p> <p>y</p></div></body>')
+    const doc = dom.window.document
+    const inlineGap = doc.querySelector('p')!.childNodes[1] as Text
+    const blockGap = doc.querySelector('div')!.childNodes[1] as Text
+    expect(drawable(inlineGap)).toBe(true)
+    expect(drawable(blockGap)).toBe(false)
   })
 })

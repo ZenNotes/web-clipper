@@ -3,7 +3,7 @@
 // selector variables see the page as it is), the highlighter and the reader.
 // Injection can repeat, so it registers once per page.
 
-import { extractPage, toMarkdown } from '../extract/extract'
+import { extractPage, selectionHtmlOf, toMarkdown } from '../extract/extract'
 import { getHighlighter } from '../highlight/highlighter'
 import { getReader } from '../reader/reader'
 import { ext } from '../shared/ext'
@@ -28,7 +28,7 @@ async function compile(req: Extract<ContentRequest, { type: 'zn:compile' }>): Pr
       url,
       highlights: hl.highlights,
       contentMode: mode,
-      selectionHtml: req.selectionHtml
+      selectionHtml: req.ignoreSelection ? '' : req.selectionHtml
     })
   const page = mode === 'nothing' ? hl.withoutMarks(run) : run()
   const matched = matchTemplate(settings.templates, url, page.schema)
@@ -48,7 +48,13 @@ async function compile(req: Extract<ContentRequest, { type: 'zn:compile' }>): Pr
     ok: true,
     note,
     matchedTemplateId: matched?.id ?? template.id,
-    page: { title: page.title, url, hasSelection: !!page.selection, highlightCount: hl.highlights.length }
+    page: {
+      title: page.title,
+      url,
+      hasSelection: !!page.selection,
+      selectionAvailable: !!page.selection || !!selectionHtmlOf(document),
+      highlightCount: hl.highlights.length
+    }
   }
 }
 

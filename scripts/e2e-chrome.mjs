@@ -233,7 +233,7 @@ try {
     check('popup link file', decodeURIComponent(m[1]) === 'Clippings/Plain Text Notes Last Forever', decodeURIComponent(m[1]))
     check('popup clipboard hash matches the link', sha256(clip) === m[2], sha256(clip))
   }
-  check('popup clipboard has frontmatter and the article', clip.startsWith('---\nsource: "') && clip.includes('tags:\n  - clippings') && clip.includes('## Files outlive formats'))
+  check('popup clipboard has frontmatter and the article', clip.startsWith('---\nsource: "') && !clip.includes('tags:') && clip.includes('## Files outlive formats'))
   check('popup closes after clipping', await waitFor(() => evaluate(popup, 'globalThis.__znClosed === true'), 'close'))
 
   // ---- quick clip (background, offscreen clipboard) ----
@@ -283,6 +283,64 @@ try {
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, pageSession)
   const closed = await evaluate(pageSession, `![...document.querySelectorAll('[data-zn-clipper-ui]')].some(h => h.shadowRoot && h.shadowRoot.querySelector('article h1.title'))`)
   check('Esc closes reader view', closed)
+
+  // ---- a selection decides the content, and the popup can switch it off ----
+  await evaluate(
+    pageSession,
+    `(() => { const r = document.createRange(); r.selectNodeContents(document.querySelectorAll('article p')[1]); const s = getSelection(); s.removeAllRanges(); s.addRange(r); return true })()`
+  )
+  const { targetId: popup2Target } = await cdp('Target.createTarget', { url: `${extOrigin}/popup/popup.html?tab=${tabId}` })
+  const popup2 = await attach(popup2Target)
+  const notice = await waitFor(() => evaluate(popup2, `document.querySelector('[role=status] span')?.textContent`), 'the selection notice')
+  const selBody = await evaluate(popup2, `document.querySelector('textarea[aria-label="Note content"]').value`)
+  check('popup says it clips the selection', notice === 'Clipping your selection.', notice)
+  check('content is the selection', selBody.startsWith('Every note app eventually goes away.') && !selBody.includes('Files outlive formats'))
+  await evaluate(popup2, `[...document.querySelectorAll('button')].find(b => b.textContent === 'Clip the whole page').click()`)
+  const wholeBody = await waitFor(async () => {
+    const v = await evaluate(popup2, `document.querySelector('textarea[aria-label="Note content"]').value`)
+    return v.includes('## Files outlive formats') ? v : null
+  }, 'the whole page')
+  const notice2 = await evaluate(popup2, `document.querySelector('[role=status] span')?.textContent`)
+  check('Clip the whole page switches the content', wholeBody.includes('## Files outlive formats') && notice2 === 'Clipping the whole page.', notice2)
+  await cdp('Target.closeTarget', { targetId: popup2Target })
+  await evaluate(pageSession, 'getSelection().removeAllRanges(), true')
+
+  // ---- a drag past a lede into a grid of cards (zennotes.org's features) ----
+  const { targetId: landingTarget } = await cdp('Target.createTarget', { url: `${origin}/landing.html` })
+  const landing = await attach(landingTarget)
+  await cdp('Emulation.setDeviceMetricsOverride', { width: 1000, height: 800, deviceScaleFactor: 1, mobile: false }, landing)
+  await waitFor(() => evaluate(landing, 'document.readyState === "complete"'), 'the landing page')
+  const landingTab = await waitFor(
+    () => evaluate(swSession, `chrome.tabs.query({}).then(ts => ts.find(t => (t.url || '').startsWith('${origin}/landing.html'))?.id)`),
+    'the landing tab'
+  )
+  await evaluate(swSession, `chrome.scripting.executeScript({ target: { tabId: ${landingTab} }, files: ['/content.js'] }).then(() => true)`)
+  await evaluate(swSession, `chrome.tabs.sendMessage(${landingTab}, { type: 'zn:highlighter', action: 'on' })`)
+  const box = await evaluate(
+    landing,
+    `(() => { const r = document.querySelector('.section-lede').getBoundingClientRect(); return { x0: r.left + 2, y0: r.top + 6, x1: r.right - 2, y1: r.bottom + 30 } })()`
+  )
+  await cdp('Input.dispatchMouseEvent', { type: 'mousePressed', x: box.x0, y: box.y0, button: 'left', clickCount: 1 }, landing)
+  for (let i = 1; i <= 10; i++) {
+    const x = box.x0 + ((box.x1 - box.x0) * i) / 10
+    const y = box.y0 + ((box.y1 - box.y0) * i) / 10
+    await cdp('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y, button: 'left', buttons: 1 }, landing)
+  }
+  await cdp('Input.dispatchMouseEvent', { type: 'mouseReleased', x: box.x1, y: box.y1, button: 'left', clickCount: 1 }, landing)
+  const landingMarks = await waitFor(async () => {
+    const m = await evaluate(
+      landing,
+      `[...document.querySelectorAll('mark[data-zn-hl]')].map(m => { const r = m.getBoundingClientRect(); return { text: m.textContent, w: r.width, h: r.height, parent: getComputedStyle(m.parentElement).display } })`
+    )
+    return m.length ? m : null
+  }, 'landing highlight marks')
+  writeFileSync(join(outDir, 'landing-highlight.png'), Buffer.from((await cdp('Page.captureScreenshot', { format: 'png' }, landing)).data, 'base64'))
+  check('the drag highlights the lede', landingMarks.map((m) => m.text).join('').includes('One keyboard-first app'))
+  check('no mark wraps bare whitespace', landingMarks.every((m) => m.text.trim() !== ''), `${landingMarks.length} marks`)
+  check('no mark is a grid or flex item', landingMarks.every((m) => !/grid|flex/.test(m.parent)))
+  check('no mark is taller than two lines', landingMarks.every((m) => m.h <= 60), JSON.stringify(landingMarks.map((m) => Math.round(m.h))))
+  const cards = await evaluate(landing, `[...document.querySelector('.bento').children].map(c => c.tagName).join(',')`)
+  check('the grid keeps its three cards', cards === 'ARTICLE,ARTICLE,ARTICLE', cards)
 
   // ---- settings page renders ----
   const { targetId: settingsTarget } = await cdp('Target.createTarget', { url: `${extOrigin}/settings/settings.html#templates` })
