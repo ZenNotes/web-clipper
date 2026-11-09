@@ -12,6 +12,7 @@ import { UI_ATTR } from '../shared/ui-attr'
 import { loadHighlights, saveHighlights } from '../shared/storage'
 import type { Highlight } from '../shared/types'
 import { anchorFromRange, locate, splitForSpan } from './anchor'
+import { OFFER_ATTR } from './offer-bar'
 
 const MARK_ATTR = 'data-zn-hl'
 const EL_ATTR = 'data-zn-hl-el'
@@ -58,6 +59,8 @@ function editable(t: EventTarget | null): boolean {
 export class Highlighter {
   highlights: Highlight[] = []
   active = false
+  /** Called after a highlight is added and saved. */
+  onAdded: (() => void) | null = null
   private loadedFor = ''
   private toolbar: HTMLElement | null = null
   private countLabel: HTMLElement | null = null
@@ -176,7 +179,7 @@ export class Highlighter {
     sel.removeAllRanges()
     this.erase()
     this.draw()
-    void this.save()
+    void this.save().then(() => this.onAdded?.())
     return true
   }
 
@@ -199,7 +202,7 @@ export class Highlighter {
     }
     this.highlights.push(h)
     img.setAttribute(EL_ATTR, h.id)
-    void this.save()
+    void this.save().then(() => this.onAdded?.())
   }
 
   remove(id: string): void {
@@ -251,6 +254,8 @@ export class Highlighter {
 
   private handleKey(e: KeyboardEvent): void {
     if (editable(e.target) || e.metaKey || e.ctrlKey || e.altKey) return
+    // Keys in the one-time offer are the offer's (Enter accepts, Esc dismisses).
+    if (e.composedPath().some((n) => (n as Element).hasAttribute?.(OFFER_ATTR))) return
     const key = e.key.toLowerCase()
     if (e.key === 'Escape') this.setActive(false)
     else if ((key === 'h' || e.key === 'Enter') && this.addSelection()) {

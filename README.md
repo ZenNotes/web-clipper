@@ -42,10 +42,15 @@ opens `zennotes://open` to wake the app. Without the handler it uses the clipboa
 - **Templates** with triggers (a URL prefix, a `/regex/`, or `schema:@Type[.key[=value]]`;
   the first match wins and the first template is the fallback), preset variables, `meta:`,
   `selector:` / `selectorHtml:`, `schema:` and prompt variables, `{% if %}`, `{% for %}` and
-  `{% set %}`, `??` fallbacks, and 51 chainable filters. Import and export as JSON, including
-  template files from Obsidian's clipper.
-- **Highlighter**: highlights are saved per page and drawn again on a later visit. When you clip,
-  they can be marked in the content (`==text==`), replace it, or be ignored.
+  `{% set %}`, `??` fallbacks, and 51 chainable filters. Import and export as JSON; template
+  files from other clippers that use the same JSON format import too.
+- **Highlighter**: highlights are saved per page. When you clip, they can be marked in the
+  content (`==text==`), replace it, or be ignored. Drawing them again when you come back to a
+  page needs access to the sites you visit, which the clipper does not ask for at install.
+  Instead, the first time you save a highlight it asks once: "Highlights are saved. Show them
+  when you come back?" `Enter` (or Show them) opens a small window that asks the browser for
+  that access; `Esc` (or Not now, or ignoring it) is remembered, and it never asks again. The
+  same choice stays in Settings, Highlighter, as "Show highlights when you return to a page".
 - **Reader view** with ZenNotes typography, an outline, and adjustable size, width and theme.
 - **Interpreter**: fill prompt variables such as `{{"a three bullet summary"}}` with your own
   key for Anthropic, OpenAI, Google Gemini, OpenRouter, Ollama, or any chat completions URL.
@@ -64,7 +69,8 @@ opens `zennotes://open` to wake the app. Without the handler it uses the clipboa
 In the popup: `Mod+Enter` clips, `Mod+E` switches Markdown and preview, `Mod+I` runs the
 Interpreter, `Esc` closes. With the highlighter on: select text and press `H` (or `Enter`),
 `U` undoes, `Esc` turns it off; a click on a highlight removes it, a click on an image
-highlights it. In reader view: `-` and `=` change the text size, `O` jumps to the outline,
+highlights it. While the one-time offer to keep highlights is showing, `Enter` accepts it and
+`Esc` dismisses it. In reader view: `-` and `=` change the text size, `O` jumps to the outline,
 `Esc` closes. Settings tabs move with the arrow keys; templates reorder with `Alt+Up/Down`.
 
 Shortcuts can be changed in the browser: `chrome://extensions/shortcuts` (Edge, Brave and Arc
@@ -84,6 +90,35 @@ npm run build
 `dist/chrome`, `dist/firefox` and `dist/safari` are the unpacked extensions. `npm run zip`
 packs each into `dist/zennotes-web-clipper-<version>-<browser>.zip`. The version comes from
 `package.json`.
+
+The store screenshots, promo tile and logo in `store/` are rendered from the real extension:
+`npm run build:e2e && npm run store:assets` (Chrome for Testing, an original article page in
+`store/source/`).
+
+## Building from source (for reviewers)
+
+The extension is bundled and minified with Vite, so its store packages are built from this
+source. The build is deterministic: file names are content hashes and the output holds no
+timestamps or machine paths. Checked on:
+
+- Ubuntu 24.04 ARM64
+- Node 24.14.0
+- npm 11.9.0
+
+From the root of the source package:
+
+```bash
+npm ci
+```
+
+```bash
+npm run build
+```
+
+`dist/firefox` is the Firefox package, byte for byte (`dist/chrome` and `dist/safari` are built
+alongside it). The build needs no network access after `npm ci`. Source code of our own is in
+`src/`; `node_modules` holds only the dependencies in `package-lock.json` (React, Defuddle,
+day.js, marked, DOMPurify, and the build tools).
 
 ## Load it unpacked
 
@@ -129,7 +164,10 @@ npm test
 The end-to-end runs load the extension into a real browser with a throwaway profile, serve
 `test/fixtures/pages` on 127.0.0.1, clip from the popup (`Mod+Enter`) and by quick clip, and
 check that each link's `clipboard=` hash is the SHA-256 of what landed on the clipboard. They
-also exercise the highlighter and reader view and save screenshots. They replace
+also exercise the highlighter, reader view and the one-time offer to keep highlights (accepted:
+a reload draws the highlight again; dismissed: it does not come back), and save screenshots.
+A script cannot click the browser's own access prompt, so there the request answers yes;
+everything after it runs for real. They replace
 `tabs.update` in the extension before clipping and block the scheme in the profile, so no
 `zennotes://` link ever reaches an installed ZenNotes.
 

@@ -10,7 +10,9 @@ export function manifestFor(browser, version, { e2eHosts = [], e2ePermissions = 
     manifest_version: 3,
     name: 'ZenNotes Web Clipper',
     short_name: 'ZenNotes Clipper',
-    description: 'Clip web pages into ZenNotes as Markdown notes.',
+    // The store summary on every store; Chrome allows 132 characters.
+    description:
+      'Clip web pages, selections and highlights into ZenNotes as clean Markdown notes. No account, no server.',
     version,
     homepage_url: 'https://zennotes.org',
     icons: ICONS,
@@ -61,10 +63,12 @@ export function manifestFor(browser, version, { e2eHosts = [], e2ePermissions = 
         browser_specific_settings: {
           gecko: {
             id: GECKO_ID,
-            strict_min_version: '128.0',
-            data_collection_permissions: { required: ['none'] }
+            // 140 (142 on Android) brought the built-in data consent the
+            // Interpreter asks with before it sends a page to a provider.
+            strict_min_version: '140.0',
+            data_collection_permissions: { required: ['none'], optional: ['websiteContent'] }
           },
-          gecko_android: { strict_min_version: '128.0' }
+          gecko_android: { strict_min_version: '142.0' }
         }
       }
     case 'safari':

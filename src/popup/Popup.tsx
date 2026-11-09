@@ -16,6 +16,7 @@ import { finalizePrompts } from '../template/render'
 import { matchTemplate } from '../template/triggers'
 import { Button, Field, Kbd, Select } from '../ui/controls'
 import { previewHtml } from '../ui/markdown'
+import { interpreterAccess, refusalMessage } from '../interpreter/access'
 
 type Status =
   | { kind: 'loading' }
@@ -139,11 +140,17 @@ export function Popup() {
       return
     }
     const origin = permissionOrigin(resolved.provider)
+    if (!origin) {
+      setStatus({ kind: 'error', message: 'The provider has no valid URL. Check Settings, Interpreter.' })
+      return
+    }
     // Asked for first, from the gesture itself: browsers refuse a permission
     // request that comes after an await.
-    const granted = origin ? await ext.permissions.request({ origins: [origin] }).catch(() => false) : false
+    const granted = await ext.permissions
+      .request(interpreterAccess(origin, flavor()) as chrome.permissions.Permissions)
+      .catch(() => false)
     if (!granted) {
-      setStatus({ kind: 'error', message: `The clipper needs access to ${origin ?? 'the provider'} to run the Interpreter.` })
+      setStatus({ kind: 'error', message: refusalMessage(resolved.provider.name, origin, flavor()) })
       return
     }
     setStatus({ kind: 'busy', label: `Asking ${resolved.model.name}` })

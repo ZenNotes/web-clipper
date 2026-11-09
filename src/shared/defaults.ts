@@ -89,7 +89,7 @@ export function defaultSettings(): Settings {
     silent: false,
     preferInline: false,
     templates: [defaultTemplate()],
-    highlighter: { contentMode: 'highlight', restoreOnVisit: false },
+    highlighter: { contentMode: 'highlight', restoreOnVisit: false, restoreOffered: false },
     reader: { font: 'serif', fontSize: 19, lineHeight: 1.6, maxWidth: 680, appearance: 'auto', customCss: '' },
     interpreter: {
       enabled: false,

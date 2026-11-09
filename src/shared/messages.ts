@@ -34,6 +34,12 @@ export type BackgroundRequest =
   | { type: 'zn:native-available' }
   | { type: 'zn:restore-sync' }
   | { type: 'zn:quick-clip'; tabId: number }
+  /** From the content script after a highlight is saved: show the offer? */
+  | { type: 'zn:offer-check' }
+  /** From the content script: the offer was accepted, ask for access. */
+  | { type: 'zn:offer-open' }
+  /** From the offer page once access is granted: register and draw now. */
+  | { type: 'zn:restore-now'; tabId?: number }
 
 /** For the Chromium offscreen document, which only writes the clipboard. */
 export interface OffscreenCopy {

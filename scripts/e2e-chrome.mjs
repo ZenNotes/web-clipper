@@ -266,6 +266,20 @@ try {
   const marks = await waitFor(() => evaluate(pageSession, `document.querySelectorAll('mark[data-zn-hl]').length`), 'a highlight mark')
   check('H turns the selection into a highlight', marks > 0, `${marks} marks`)
   writeFileSync(join(outDir, 'highlighter.png'), Buffer.from((await cdp('Page.captureScreenshot', { format: 'png' }, pageSession)).data, 'base64'))
+  // The first saved highlight brings the one-time offer, holding focus.
+  const offerText = await waitFor(
+    () => evaluate(pageSession, `document.querySelector('[data-zn-offer]')?.shadowRoot.querySelector('.bar span')?.textContent`),
+    'the offer to keep highlights'
+  )
+  check('the first highlight offers to keep highlights visible', offerText === 'Highlights are saved. Show them when you come back?', offerText)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, pageSession)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, pageSession)
+  const afterEsc = await evaluate(
+    swSession,
+    `chrome.storage.local.get('settings').then(r => r.settings.highlighter)`
+  )
+  const offerGone = await evaluate(pageSession, `!document.querySelector('[data-zn-offer]')`)
+  check('Esc dismisses the offer and remembers it', offerGone && afterEsc.restoreOffered === true && afterEsc.restoreOnVisit === false, JSON.stringify(afterEsc))
   await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }, pageSession)
   const saved = await evaluate(swSession, `chrome.storage.local.get(null).then(all => Object.keys(all).filter(k => k.startsWith('hl:')))`)
   check('highlight saved for the page without tracking parameters', saved.length === 1 && saved[0] === `hl:${origin}/article.html`, saved.join(','))
@@ -341,6 +355,65 @@ try {
   check('no mark is taller than two lines', landingMarks.every((m) => m.h <= 60), JSON.stringify(landingMarks.map((m) => Math.round(m.h))))
   const cards = await evaluate(landing, `[...document.querySelector('.bento').children].map(c => c.tagName).join(',')`)
   check('the grid keeps its three cards', cards === 'ARTICLE,ARTICLE,ARTICLE', cards)
+  await sleep(1000)
+  check('a dismissed offer does not come back', await evaluate(landing, `!document.querySelector('[data-zn-offer]')`))
+
+  // ---- accepting the offer: access, the restore script, and a reload ----
+  await evaluate(
+    swSession,
+    `chrome.storage.local.get('settings').then(r => { r.settings.highlighter.restoreOffered = false; return chrome.storage.local.set({ settings: r.settings }) }).then(() => true)`
+  )
+  const { targetId: recipeTarget } = await cdp('Target.createTarget', { url: `${origin}/recipe.html` })
+  const recipe = await attach(recipeTarget)
+  await waitFor(() => evaluate(recipe, 'document.readyState === "complete"'), 'the recipe page')
+  const recipeTab = await waitFor(
+    () => evaluate(swSession, `chrome.tabs.query({}).then(ts => ts.find(t => (t.url || '').startsWith('${origin}/recipe.html'))?.id)`),
+    'the recipe tab'
+  )
+  await evaluate(swSession, `chrome.scripting.executeScript({ target: { tabId: ${recipeTab} }, files: ['/content.js'] }).then(() => true)`)
+  await evaluate(swSession, `chrome.tabs.sendMessage(${recipeTab}, { type: 'zn:highlighter', action: 'on' })`)
+  await evaluate(
+    recipe,
+    `(() => { const r = document.createRange(); r.selectNodeContents(document.querySelector('article p').firstChild); const s = getSelection(); s.removeAllRanges(); s.addRange(r); return true })()`
+  )
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'h', code: 'KeyH', text: 'h', windowsVirtualKeyCode: 72 }, recipe)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'h', code: 'KeyH', windowsVirtualKeyCode: 72 }, recipe)
+  await waitFor(() => evaluate(recipe, `!!document.querySelector('[data-zn-offer]')`), 'the offer on a fresh page')
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, recipe)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, recipe)
+  const offerPage = await waitFor(async () => {
+    const { targetInfos } = await cdp('Target.getTargets')
+    return targetInfos.find((t) => t.url.startsWith(`${extOrigin}/offer/offer.html`))
+  }, 'the access window')
+  check('Enter opens the access window for that tab', offerPage.url.endsWith(`?tab=${recipeTab}`), offerPage.url)
+  const offerSession = await attach(offerPage.targetId)
+  await waitFor(() => evaluate(offerSession, `document.activeElement && document.activeElement.id === 'yes'`), 'the focused button')
+  // The browser's own prompt cannot be clicked by a script: the request
+  // answers yes as a person would. Everything after it is the real path.
+  await evaluate(offerSession, `chrome.permissions.request = async () => true; window.close = () => { globalThis.__znClosed = true }; true`)
+  writeFileSync(join(outDir, 'offer-window.png'), Buffer.from((await cdp('Page.captureScreenshot', { format: 'png' }, offerSession)).data, 'base64'))
+  await cdp('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, offerSession)
+  await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 }, offerSession)
+  const on = await waitFor(
+    () => evaluate(swSession, `chrome.storage.local.get('settings').then(r => r.settings.highlighter.restoreOnVisit === true && r.settings.highlighter)`),
+    'the setting to turn on'
+  )
+  check('accepting turns on Show highlights on return', on.restoreOnVisit === true && on.restoreOffered === true)
+  const registered = await waitFor(
+    () => evaluate(swSession, `chrome.scripting.getRegisteredContentScripts().then(r => r.find(x => x.id === 'zn-restore-highlights'))`),
+    'the restore script registration'
+  )
+  check('the restore script is registered for the granted sites', JSON.stringify(registered.matches) === '["http://127.0.0.1/*"]', JSON.stringify(registered.matches))
+  check('the access window closes itself', await waitFor(() => evaluate(offerSession, 'globalThis.__znClosed === true'), 'close'))
+  await cdp('Page.reload', {}, recipe)
+  await sleep(300)
+  await waitFor(() => evaluate(recipe, 'document.readyState === "complete"'), 'the reload')
+  const redrawn = await waitFor(
+    () => evaluate(recipe, `[...document.querySelectorAll('mark[data-zn-hl]')].map(m => m.textContent).join('')`),
+    'highlights after the reload'
+  )
+  check('after a reload the highlight is drawn again', redrawn.includes('These cookies are the reason'), redrawn.slice(0, 60))
+  writeFileSync(join(outDir, 'restored-after-reload.png'), Buffer.from((await cdp('Page.captureScreenshot', { format: 'png' }, recipe)).data, 'base64'))
 
   // ---- settings page renders ----
   const { targetId: settingsTarget } = await cdp('Target.createTarget', { url: `${extOrigin}/settings/settings.html#templates` })

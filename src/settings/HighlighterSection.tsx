@@ -59,7 +59,9 @@ export function HighlighterSection({ settings, update }: SectionProps) {
           hint="Needs access to the sites you visit, asked for when you turn this on."
           checked={settings.highlighter.restoreOnVisit}
           onChange={(v) => {
-            const apply = () => update((s) => ({ ...s, highlighter: { ...s.highlighter, restoreOnVisit: v } }))
+            // Choosing here answers the one-time offer too.
+            const apply = () =>
+              update((s) => ({ ...s, highlighter: { ...s.highlighter, restoreOnVisit: v, restoreOffered: true } }))
             if (!v) {
               apply()
               return

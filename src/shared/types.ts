@@ -85,6 +85,9 @@ export interface Settings {
     contentMode: HighlightContentMode
     /** Draw saved highlights again on a later visit (needs site access). */
     restoreOnVisit: boolean
+    /** The offer to turn restoreOnVisit on has been shown. It is shown once,
+     *  the first time a highlight is saved, and never again. */
+    restoreOffered: boolean
   }
   reader: {
     font: 'sans' | 'serif' | 'mono'

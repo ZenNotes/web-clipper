@@ -13,12 +13,13 @@ import {
 } from '../shared/handoff'
 import type { BackgroundRequest, CompileResponse, ContentError, ContentRequest } from '../shared/messages'
 import { answerPrompts, noteParts, permissionOrigin, resolveModel, targetFor, withParts } from '../shared/pipeline'
-import { loadSettings, onSettingsChanged } from '../shared/storage'
+import { decideOffer, PAGE_ORIGINS, restoreMatches } from '../highlight/offer'
+import { interpreterAccess } from '../interpreter/access'
+import { loadSettings, onSettingsChanged, saveSettings } from '../shared/storage'
 import type { Settings } from '../shared/types'
 import { noteText } from '../template/compile'
 
 const RESTORE_ID = 'zn-restore-highlights'
-const PAGE_ORIGINS = ['http://*/*', 'https://*/*']
 /** Safari ignores the application id; other browsers never take this path. */
 const NATIVE_APP_ID = 'org.zennotes.app'
 
@@ -175,7 +176,9 @@ async function providerAllowed(settings: Settings): Promise<boolean> {
   const origin = resolved ? permissionOrigin(resolved.provider) : null
   if (!origin) return false
   try {
-    return await ext.permissions.contains({ origins: [origin] })
+    // On Firefox the data consent must have been given too; quick clip has
+    // no gesture to ask with, so it only uses what the popup was granted.
+    return await ext.permissions.contains(interpreterAccess(origin, flavor()) as chrome.permissions.Permissions)
   } catch {
     return false
   }
@@ -198,23 +201,60 @@ async function syncRestoreScript(settings?: Settings): Promise<void> {
   const s = settings ?? (await loadSettings())
   const scripting = ext.scripting as typeof chrome.scripting | undefined
   if (!scripting?.registerContentScripts) return
+  let granted: string[] = []
+  try {
+    granted = (await ext.permissions.getAll()).origins ?? []
+  } catch {
+    granted = []
+  }
+  const matches = s.highlighter.restoreOnVisit ? restoreMatches(granted) : []
+  const existing = await scripting.getRegisteredContentScripts({ ids: [RESTORE_ID] }).catch(() => [])
+  const same =
+    existing.length > 0 && JSON.stringify([...(existing[0]!.matches ?? [])].sort()) === JSON.stringify([...matches].sort())
+  if (same || (existing.length === 0 && matches.length === 0)) return
+  if (existing.length > 0) await scripting.unregisterContentScripts({ ids: [RESTORE_ID] }).catch(() => undefined)
+  if (matches.length > 0) {
+    await scripting
+      .registerContentScripts([
+        { id: RESTORE_ID, matches, js: ['restore.js'], runAt: 'document_idle', persistAcrossSessions: true }
+      ])
+      .catch(() => undefined)
+  }
+}
+
+/** Shows the offer once, the first time a highlight is saved while
+ *  highlights are not drawn on return and the extension has no site access. */
+async function offerCheck(): Promise<boolean> {
+  const s = await loadSettings()
   let granted = false
   try {
     granted = await ext.permissions.contains({ origins: PAGE_ORIGINS })
   } catch {
     granted = false
   }
-  const want = s.highlighter.restoreOnVisit && granted
-  const existing = await scripting.getRegisteredContentScripts({ ids: [RESTORE_ID] }).catch(() => [])
-  if (want && existing.length === 0) {
-    await scripting
-      .registerContentScripts([
-        { id: RESTORE_ID, matches: PAGE_ORIGINS, js: ['restore.js'], runAt: 'document_idle', persistAcrossSessions: true }
-      ])
-      .catch(() => undefined)
-  } else if (!want && existing.length > 0) {
-    await scripting.unregisterContentScripts({ ids: [RESTORE_ID] }).catch(() => undefined)
+  const d = decideOffer(s, granted)
+  if (d.next) await saveSettings(d.next)
+  return d.offer
+}
+
+/** The access request has to come from a click or key in an extension page;
+ *  a content script cannot make it. A small window holds that one question
+ *  in Chrome and Firefox alike (a tab where there are no windows). */
+async function openOffer(tabId: number | undefined): Promise<void> {
+  const url = ext.runtime.getURL(`offer/offer.html${tabId !== undefined ? `?tab=${tabId}` : ''}`)
+  try {
+    await ext.windows.create({ url, type: 'popup', width: 460, height: 200, focused: true })
+  } catch {
+    await ext.tabs.create({ url })
   }
+}
+
+/** Registers the restore script and draws saved highlights in `tabId` now,
+ *  so accepting the offer needs no reload. */
+async function restoreNow(tabId: number | undefined): Promise<void> {
+  await syncRestoreScript()
+  if (tabId === undefined) return
+  await ext.scripting.executeScript({ target: { tabId }, files: ['/restore.js'] }).catch(() => undefined)
 }
 
 function createMenus(): void {
@@ -268,7 +308,7 @@ ext.commands?.onCommand.addListener((command, tab) => {
   void run()
 })
 
-ext.runtime.onMessage.addListener((msg: BackgroundRequest | { target?: string }, _sender, sendResponse) => {
+ext.runtime.onMessage.addListener((msg: BackgroundRequest | { target?: string }, sender, sendResponse) => {
   if (!msg || typeof msg !== 'object' || (msg as { target?: string }).target === 'offscreen') return
   const m = msg as BackgroundRequest
   if (m.type === 'zn:native-available') {
@@ -289,6 +329,27 @@ ext.runtime.onMessage.addListener((msg: BackgroundRequest | { target?: string },
         () => sendResponse({ ok: true }),
         (err: unknown) => sendResponse({ ok: false, error: String(err) })
       )
+    return true
+  }
+  if (m.type === 'zn:offer-check') {
+    offerCheck().then(
+      (offer) => sendResponse({ offer }),
+      () => sendResponse({ offer: false })
+    )
+    return true
+  }
+  if (m.type === 'zn:offer-open') {
+    openOffer(sender.tab?.id).then(
+      () => sendResponse({ ok: true }),
+      () => sendResponse({ ok: false })
+    )
+    return true
+  }
+  if (m.type === 'zn:restore-now') {
+    restoreNow(m.tabId).then(
+      () => sendResponse({ ok: true }),
+      () => sendResponse({ ok: false })
+    )
     return true
   }
   if (m.type === 'zn:restore-sync') {

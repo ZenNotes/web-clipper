@@ -2,7 +2,7 @@
   "name": "zennotes-web-clipper",
   "version": "0.1.0",
   "private": true,
-  "description": "Clip web pages into ZenNotes as Markdown notes.",
+  "description": "Clip web pages, selections and highlights into ZenNotes as clean Markdown notes. No account, no server.",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -16,7 +16,8 @@
     "lint:firefox": "web-ext lint --source-dir dist/firefox",
     "build:e2e": "node scripts/build.mjs --e2e",
     "e2e:chrome": "node scripts/e2e-chrome.mjs",
-    "e2e:firefox": "node scripts/e2e-firefox.mjs"
+    "e2e:firefox": "node scripts/e2e-firefox.mjs",
+    "store:assets": "node scripts/store-assets.mjs"
   },
   "dependencies": {
     "dayjs": "^1.11.13",

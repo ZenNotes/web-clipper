@@ -13,6 +13,7 @@ import { loadSettings } from '../shared/storage'
 import { compileNote, templateById } from '../template/compile'
 import { finalizePrompts } from '../template/render'
 import { matchTemplate } from '../template/triggers'
+import { showOfferBar } from '../highlight/offer-bar'
 import { showToast } from './toast'
 
 const FLAG = '__zennotesClipperContent'
@@ -111,4 +112,16 @@ if (!g[FLAG]) {
   })
   // Saved highlights are drawn as soon as the script runs on a page.
   void getHighlighter().load()
+  // The first highlight saved may bring the one-time offer to keep
+  // highlights visible on return; the background decides, at most once.
+  let offerAsked = false
+  getHighlighter().onAdded = () => {
+    if (offerAsked) return
+    offerAsked = true
+    void (async () => {
+      const r = (await ext.runtime.sendMessage({ type: 'zn:offer-check' }).catch(() => null)) as { offer?: boolean } | null
+      if (!r?.offer) return
+      if ((await showOfferBar(document)) === 'accept') await ext.runtime.sendMessage({ type: 'zn:offer-open' })
+    })()
+  }
 }

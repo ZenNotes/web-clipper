@@ -146,6 +146,17 @@ const CHROME_HELPERS = `
       window.__znTab = W.gBrowser.selectedTab;
       return true;
     },
+    adopt(part) {
+      for (const win of Services.wm.getEnumerator('navigator:browser')) {
+        for (const tab of win.gBrowser.tabs) {
+          if (tab.linkedBrowser.currentURI.spec.includes(part)) {
+            window.__znTab = tab;
+            return tab.linkedBrowser.currentURI.spec;
+          }
+        }
+      }
+      return null;
+    },
     run(code) {
       const win = window.__znTab.linkedBrowser.contentWindow;
       if (!win) throw new Error('extension page is not in this process');
@@ -244,6 +255,48 @@ try {
   check('reader view opens', reader)
   const rshot = await bidi('browsingContext.captureScreenshot', { context: page })
   writeFileSync(join(outDir, 'firefox-reader.png'), Buffer.from(rshot.data, 'base64'))
+
+  // ---- the one-time offer to keep highlights, accepted ----
+  await inExt(`return browser.tabs.sendMessage(${tabId}, { type: 'zn:reader', action: 'toggle' })`)
+  await inExt(`return browser.tabs.sendMessage(${tabId}, { type: 'zn:highlighter', action: 'on' })`)
+  await run(
+    page,
+    `const r = document.createRange(); r.selectNodeContents(document.querySelectorAll('article p')[2].firstChild); const s = getSelection(); s.removeAllRanges(); s.addRange(r); return true`
+  )
+  const key = (value) => bidi('input.performActions', {
+    context: page,
+    actions: [{ type: 'key', id: 'kb', actions: [{ type: 'keyDown', value }, { type: 'keyUp', value }] }]
+  })
+  await key('h')
+  const offerText = await waitFor(
+    () => run(page, `return document.querySelector('[data-zn-offer]')?.shadowRoot.querySelector('.bar span')?.textContent`),
+    'the offer'
+  )
+  check('the first highlight offers to keep highlights visible', offerText === 'Highlights are saved. Show them when you come back?', offerText)
+  await key('')
+  const offerUrl = await waitFor(() => chromeRun(`return window.__zn.adopt('/offer/offer.html')`), 'the access window')
+  check('Enter opens the access window for that tab', offerUrl.endsWith(`?tab=${tabId}`), offerUrl)
+  await waitFor(() => inExt(`return document.activeElement && document.activeElement.id === 'yes'`), 'the focused button')
+  // The browser's prompt cannot be clicked by a script: the request answers
+  // yes as a person would. Everything after it is the real path.
+  await inExt(`browser.permissions.request = async () => true; window.close = () => { window.__znClosed = true }; return true`)
+  await inExt(`window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); return true`)
+  const on = await waitFor(
+    () => inExt(`const r = await browser.storage.local.get('settings'); return r.settings.highlighter.restoreOnVisit === true && r.settings.highlighter`),
+    'the setting to turn on'
+  )
+  check('accepting turns on Show highlights on return', on.restoreOffered === true)
+  const reg = await waitFor(
+    () => inExt(`const r = await browser.scripting.getRegisteredContentScripts(); return r.find(x => x.id === 'zn-restore-highlights')?.matches`),
+    'the restore registration'
+  )
+  check('the restore script is registered for the granted sites', JSON.stringify(reg) === '["http://127.0.0.1/*"]', JSON.stringify(reg))
+  await bidi('browsingContext.reload', { context: page, wait: 'complete' })
+  const redrawn = await waitFor(
+    () => run(page, `const t = [...document.querySelectorAll('mark[data-zn-hl]')].map(m => m.textContent).join(''); return t.trim() ? t : null`),
+    'highlights after the reload'
+  )
+  check('after a reload the highlight is drawn again', redrawn.includes('Proprietary databases'), JSON.stringify(redrawn.slice(0, 50)))
 } catch (err) {
   failures++
   console.log(`FAIL ${err instanceof Error ? err.message : err}`)

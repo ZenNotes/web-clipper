@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildRequest, interpret, parseAnswers, permissionOrigin, responseText } from '../src/interpreter/interpreter'
 import { newProvider } from '../src/shared/defaults'
+import { interpreterAccess, refusalMessage } from '../src/interpreter/access'
 import type { ModelConfig, ProviderPreset } from '../src/shared/types'
 
 const model = (modelId: string): ModelConfig => ({ id: 'm', providerId: 'p', name: 'M', modelId })
@@ -83,5 +84,25 @@ describe('answers', () => {
     await expect(interpret(input, f(401))).rejects.toThrow(/API key/)
     await expect(interpret({ ...input, provider: provider('ollama', '') }, f(403))).rejects.toThrow(/OLLAMA_ORIGINS/)
     await expect(interpret(input, f(500))).rejects.toThrow(/500: nope/)
+  })
+})
+
+describe('access before the Interpreter runs', () => {
+  it('asks Firefox for website content consent with the provider access, in one request', () => {
+    expect(interpreterAccess('https://api.anthropic.com/*', 'firefox')).toEqual({
+      origins: ['https://api.anthropic.com/*'],
+      data_collection: ['websiteContent']
+    })
+    expect(interpreterAccess('https://api.anthropic.com/*', 'chrome')).toEqual({ origins: ['https://api.anthropic.com/*'] })
+    expect(interpreterAccess('https://api.anthropic.com/*', 'safari')).toEqual({ origins: ['https://api.anthropic.com/*'] })
+  })
+
+  it('says in one line why it did not run', () => {
+    expect(refusalMessage('Anthropic', 'https://api.anthropic.com/*', 'firefox')).toBe(
+      'The Interpreter needs your OK to send this page to Anthropic.'
+    )
+    expect(refusalMessage('Anthropic', 'https://api.anthropic.com/*', 'chrome')).toBe(
+      'The clipper needs access to https://api.anthropic.com/* to run the Interpreter.'
+    )
   })
 })

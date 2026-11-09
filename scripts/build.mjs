@@ -51,7 +51,8 @@ await build({
       input: {
         popup: resolve(root, 'src/popup/popup.html'),
         settings: resolve(root, 'src/settings/settings.html'),
-        offscreen: resolve(root, 'src/offscreen/offscreen.html')
+        offscreen: resolve(root, 'src/offscreen/offscreen.html'),
+        offer: resolve(root, 'src/offer/offer.html')
       },
       output: { entryFileNames: 'assets/[name]-[hash].js', chunkFileNames: 'assets/[name]-[hash].js' }
     }
