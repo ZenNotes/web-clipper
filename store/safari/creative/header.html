@@ -1,0 +1,132 @@
+<!doctype html>
+<!--
+  App Store product page header, 3840x1646 (21:9). One idea: a page you read
+  becomes a plain Markdown note. Left, the real highlighter screenshot of the
+  sample article; right, the note the default template writes for it. Rendered
+  by `node scripts/app-store-creative.mjs`.
+-->
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --paper: #fbf1c7;
+    --paper-1: #f2e5bc;
+    --paper-2: #e5d5ad;
+    --ink: #3c3836;
+    --ink-soft: #7c6f64;
+    --accent: #c35e0a;
+    --mark: rgba(215, 153, 33, 0.28);
+    --shadow: 42, 38, 32;
+  }
+  html, body { margin: 0; width: 3840px; height: 1646px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(ellipse 70% 80% at 50% 45%, var(--paper) 0%, var(--paper) 45%, var(--paper-1) 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    color: var(--ink);
+  }
+  .stage {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; align-items: center; gap: 340px;
+  }
+  .card {
+    width: 1180px; height: 1000px;
+    border-radius: 40px;
+    overflow: hidden;
+    background: #fffaf0;
+    box-shadow:
+      0 2px 0 rgba(var(--shadow), 0.04),
+      0 30px 80px rgba(var(--shadow), 0.16),
+      0 8px 24px rgba(var(--shadow), 0.08);
+    display: flex; flex-direction: column;
+  }
+  .bar {
+    height: 92px; flex: none;
+    display: flex; align-items: center; gap: 22px;
+    padding: 0 36px;
+    border-bottom: 2px solid var(--paper-2);
+    background: #f7efd8;
+  }
+  .dots { display: flex; gap: 16px; }
+  .dots i { width: 22px; height: 22px; border-radius: 50%; background: var(--paper-2); display: block; }
+  .address {
+    flex: 1; height: 50px; border-radius: 25px; background: #efe5c8;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: var(--ink-soft); letter-spacing: 0.01em;
+  }
+  .file { font-size: 28px; color: var(--ink-soft); font-weight: 500; }
+  .page {
+    flex: 1; position: relative;
+    background-image: url("../screenshots/mac/02-highlighter.png");
+    background-repeat: no-repeat;
+    /* Shows x 560..2000, y 20.. of the 2560x1600 capture at 1180 px wide. */
+    background-size: calc(2560px * 1180 / 1440) auto;
+    background-position: calc(-560px * 1180 / 1440) calc(-20px * 1180 / 1440);
+  }
+  .note {
+    flex: 1; padding: 44px 52px;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 29px; line-height: 1.62; color: var(--ink);
+    position: relative;
+  }
+  .note .l { white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+  .note .wrap { white-space: normal; }
+  .k { color: var(--ink-soft); }
+  .d { color: #b8a98e; }
+  .s { color: #6c782e; }
+  .h { color: var(--accent); font-weight: 600; }
+  mark { background: var(--mark); color: inherit; border-radius: 6px; padding: 0 4px; }
+  .gap { height: 0.8em; }
+  .note::after, .page::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 160px;
+    background: linear-gradient(rgba(255, 250, 240, 0), #fffaf0);
+  }
+  .page::after { background: linear-gradient(rgba(250, 246, 236, 0), #faf6ec); }
+  .icon {
+    position: absolute; left: 50%; top: 50%;
+    width: 250px; height: 250px; margin: -125px 0 0 -125px;
+    border-radius: 56px;
+    box-shadow: 0 24px 60px rgba(var(--shadow), 0.28), 0 0 0 10px var(--paper);
+    z-index: 2;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card">
+      <div class="bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="address">margin-notes.example</div>
+      </div>
+      <div class="page"></div>
+    </div>
+    <div class="card">
+      <div class="bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="file">Clippings / Keep your notes where they last.md</div>
+      </div>
+      <div class="note">
+        <div class="l d">---</div>
+        <div class="l"><span class="k">source:</span> <span class="s">"https://margin-notes.example/notes-that-last"</span></div>
+        <div class="l"><span class="k">author:</span></div>
+        <div class="l">  <span class="d">-</span> <span class="s">"[[Lena Ortiz]]"</span></div>
+        <div class="l"><span class="k">published:</span> 2026-10-28</div>
+        <div class="l"><span class="k">created:</span> 2026-11-09</div>
+        <div class="l"><span class="k">description:</span> <span class="s">"Notes kept as plain text files outlive every app that opens them. A short case for writing things down in a format that lasts."</span></div>
+        <div class="l d">---</div>
+        <div class="gap"></div>
+        <div class="wrap">Every note-taking app makes the same quiet promise: write here and you will find it again.</div>
+        <div class="gap"></div>
+        <div class="wrap"><mark>==Plain text is that format.==</mark> A Markdown file opens in any editor on any machine, today and in twenty years.</div>
+        <div class="gap"></div>
+        <div class="l h">## Write first, organize later</div>
+        <div class="gap"></div>
+        <div class="wrap">The best capture habit is the one with the least friction. <mark>==Jot the idea, the quote, the link you meant to read, and give it a name.==</mark></div>
+      </div>
+    </div>
+  </div>
+  <img class="icon" src="../../../safari/ZenNotes%20Web%20Clipper/Shared%20(App)/Assets.xcassets/AppIcon.appiconset/universal-icon-1024@1x.png" alt="" />
+</body>
+</html>

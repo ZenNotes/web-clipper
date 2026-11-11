@@ -1,0 +1,52 @@
+<!doctype html>
+<!--
+  App Store search results asset, 3840x2560 (3:2). States the obvious: the
+  clipper turns the page you are reading into a Markdown note. The picture is
+  the real popup over the sample article (store/safari/screenshots/mac).
+  Rendered by `node scripts/app-store-creative.mjs`.
+-->
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --paper: #fbf1c7;
+    --paper-1: #f2e5bc;
+    --ink: #3c3836;
+    --accent: #c35e0a;
+    --shadow: 42, 38, 32;
+  }
+  html, body { margin: 0; width: 3840px; height: 2560px; overflow: hidden; }
+  body {
+    background: radial-gradient(ellipse 80% 70% at 50% 40%, var(--paper) 0%, var(--paper) 50%, var(--paper-1) 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+    color: var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  h1 {
+    margin: 160px 0 0;
+    font-size: 150px; line-height: 1.1; font-weight: 650; letter-spacing: -0.02em;
+    text-align: center;
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+  .shot {
+    margin-top: 120px;
+    width: 2860px; height: calc(2860px * 1450 / 2120);
+    border-radius: 48px;
+    background-image: url("../screenshots/mac/01-popup.png");
+    background-repeat: no-repeat;
+    /* Shows x 440..2560, y 0..1450 of the 2560x1600 capture. */
+    background-size: calc(2560px * 2860 / 2120) auto;
+    background-position: calc(-440px * 2860 / 2120) 0;
+    box-shadow:
+      0 2px 0 rgba(var(--shadow), 0.05),
+      0 40px 110px rgba(var(--shadow), 0.2),
+      0 10px 30px rgba(var(--shadow), 0.1);
+  }
+</style>
+</head>
+<body>
+  <h1>Clip any page into a <em>Markdown note</em></h1>
+  <div class="shot"></div>
+</body>
+</html>

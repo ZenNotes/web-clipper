@@ -119,6 +119,16 @@ The highlighter: Mac, Option-Shift-H, then select text. iPhone and iPad: the Hig
 The optional Interpreter is off until the person adds their own AI provider and API key in the extension's settings; it sends page content only to the provider they chose. Nothing is sent to us.
 ```
 
+## Header and search results images (iOS)
+
+The iOS version page also takes a product page header (21:9, 3840x1646) and a search results image
+(3:2, 3840x2560), both optional and shown on iOS 27 and later. Without a search results image,
+the screenshots are used. Ours are in `creative/`, rendered from the HTML beside them (which reuses
+the Mac screenshots) by `node scripts/app-store-creative.mjs`: the header pairs the sample article
+with the note the default template writes for it, around the app icon; the search results image
+puts "Clip any page into a Markdown note" over the real popup. Apple's rules: no alpha channel, key
+art in the centre, at most a short phrase of text, no prices, URLs or other platforms' logos.
+
 ## Screenshots
 
 All of them show the real extension on an original article page (`store/source/article.html`):
